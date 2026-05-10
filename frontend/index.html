@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QEasy — Квизы в реальном времени</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #12121a;
+            --bg3: #1a1a26;
+            --border: rgba(255,255,255,0.08);
+            --border2: rgba(255,255,255,0.15);
+            --text: #f0f0f8;
+            --text2: #8888aa;
+            --text3: #5555777;
+            --accent: #7c5cfc;
+            --accent2: #a78bfa;
+            --accent3: #c4b5fd;
+            --green: #34d399;
+            --red: #f87171;
+            --yellow: #fbbf24;
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+            --radius: 16px;
+            --radius-sm: 8px;
+            --shadow: 0 0 40px rgba(124,92,252,0.15);
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-body);
+            font-size: 16px;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── NOISE TEXTURE ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.4;
+        }
+
+        /* ── PAGES ── */
+        .page { display: none; min-height: 100vh; }
+        .page.active { display: flex; flex-direction: column; }
+
+        /* ── NAV ── */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: rgba(10,10,15,0.85);
+            backdrop-filter: blur(20px);
+            z-index: 100;
+        }
+        .logo {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent2), var(--accent3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+        .nav-actions { display: flex; gap: 12px; align-items: center; }
+
+        /* ── BUTTONS ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        .btn-primary:hover { background: #6d4ee6; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,92,252,0.4); }
+        .btn-secondary {
+            background: var(--bg3);
+            color: var(--text2);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { border-color: var(--border2); color: var(--text); }
+        .btn-ghost { background: transparent; color: var(--text2); }
+        .btn-ghost:hover { color: var(--text); background: var(--bg3); }
+        .btn-danger { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+        .btn-danger:hover { background: rgba(248,113,113,0.25); }
+        .btn-lg { padding: 16px 32px; font-size: 17px; border-radius: var(--radius); }
+        .btn-sm { padding: 8px 16px; font-size: 13px; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+        /* ── INPUTS ── */
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-label { font-size: 13px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+        input, textarea, select {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-family: var(--font-body);
+            font-size: 15px;
+            padding: 12px 16px;
+            width: 100%;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,252,0.15); }
+        input::placeholder, textarea::placeholder { color: var(--text3); }
+        select option { background: var(--bg2); }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+        .card:hover { border-color: var(--border2); }
+
+        /* ── TOAST ── */
+        #toast-container {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+            max-width: 320px;
+        }
+        .toast-success { background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.3); color: var(--green); }
+        .toast-error { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
+        .toast-info { background: rgba(124,92,252,0.15); border: 1px solid rgba(124,92,252,0.3); color: var(--accent3); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--bg2);
+            border: 1px solid var(--border2);
+            border-radius: var(--radius);
+            padding: 32px;
+            width: 90%;
+            max-width: 500px;
+            animation: modalIn 0.25s ease;
+        }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin-bottom: 24px; }
+
+        /* ── BADGE ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-draft { background: rgba(136,136,170,0.15); color: var(--text2); }
+        .badge-published { background: rgba(52,211,153,0.15); color: var(--green); }
+        .badge-active { background: rgba(124,92,252,0.2); color: var(--accent3); }
+        .badge-finished { background: rgba(136,136,170,0.1); color: var(--text3); }
+
+        /* ── LOADER ── */
+        .spinner {
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── DIVIDER ── */
+        .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+        /* ══════════════════════════════════
+           PAGE: HOME
+        ══════════════════════════════════ */
+        #page-home {
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-glow {
+            position: absolute;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(124,92,252,0.2) 0%, transparent 70%);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -60%);
+            pointer-events: none;
+        }
+        .hero {
+            text-align: center;
+            padding: 80px 40px;
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+        }
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 100px;
+            border: 1px solid rgba(124,92,252,0.3);
+            background: rgba(124,92,252,0.1);
+            color: var(--accent3);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 32px;
+        }
+        .hero-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(48px, 8vw, 80px);
+            font-weight: 800;
+            line-height: 1.05;
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+        }
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--accent2), var(--accent3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p { font-size: 18px; color: var(--text2); margin-bottom: 48px; max-width: 480px; margin-left: auto; margin-right: auto; }
+        .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+        /* ══════════════════════════════════
+           PAGE: AUTH
+        ══════════════════════════════════ */
+        #page-auth {
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .auth-box {
+            width: 100%;
+            max-width: 440px;
+            padding: 40px;
+        }
+        .auth-title {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .auth-subtitle { color: var(--text2); margin-bottom: 32px; }
+        .auth-form { display: flex; flex-direction: column; gap: 20px; }
+        .auth-switch { text-align: center; margin-top: 24px; color: var(--text2); font-size: 14px; }
+        .auth-switch a { color: var(--accent3); cursor: pointer; text-decoration: none; }
+        .auth-switch a:hover { text-decoration: underline; }
+
+        /* ══════════════════════════════════
+           PAGE: DASHBOARD
+        ══════════════════════════════════ */
+        #page-dashboard { padding: 0; }
+        .dashboard-layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 65px); }
+        .sidebar {
+            border-right: 1px solid var(--border);
+            padding: 32px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .sidebar-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); padding: 0 12px; margin: 16px 0 8px; font-weight: 600; }
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--text2);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+        .sidebar-item:hover { background: var(--bg3); color: var(--text); }
+        .sidebar-item.active { background: rgba(124,92,252,0.15); color: var(--accent3); border-color: rgba(124,92,252,0.2); }
+        .sidebar-icon { font-size: 18px; width: 20px; text-align: center; }
+        .main-content { padding: 40px; overflow-y: auto; }
+        .content-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+        .content-title { font-family: var(--font-display); font-size: 28px; font-weight: 700; }
+        .content-subtitle { color: var(--text2); font-size: 14px; margin-top: 4px; }
+
+        /* Tab content */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Quiz grid */
+        .quiz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .quiz-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .quiz-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent3));
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .quiz-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: var(--shadow); }
+        .quiz-card:hover::before { opacity: 1; }
+        .quiz-card-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .quiz-card-meta { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+        .quiz-card-stat { font-size: 13px; color: var(--text2); }
+        .quiz-card-actions { display: flex; gap: 8px; margin-top: 16px; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            color: var(--text2);
+        }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+
+        /* ══════════════════════════════════
+           PAGE: CREATE QUIZ
+        ══════════════════════════════════ */
+        .create-layout { max-width: 800px; }
+        .section-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .questions-list { display: flex; flex-direction: column; gap: 16px; }
+        .question-item {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            position: relative;
+        }
+        .question-number {
+            font-family: var(--font-display);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent2);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+        .answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+        .answer-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            transition: border-color 0.2s;
+        }
+        .answer-input-row.correct { border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.05); }
+        .answer-input-row input {
+            background: transparent;
+            border: none;
+            padding: 4px 0;
+            flex: 1;
+        }
+        .answer-input-row input:focus { box-shadow: none; }
+        .correct-toggle {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--border2);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+        .correct-toggle.active { background: var(--green); border-color: var(--green); }
+
+        /* ══════════════════════════════════
+           PAGE: SESSION (ORGANIZER)
+        ══════════════════════════════════ */
+        .session-layout {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .session-main { display: flex; flex-direction: column; gap: 24px; }
+        .session-sidebar-panel { display: flex; flex-direction: column; gap: 16px; }
+        .room-code-display {
+            background: linear-gradient(135deg, rgba(124,92,252,0.2), rgba(167,139,250,0.1));
+            border: 1px solid rgba(124,92,252,0.3);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-align: center;
+        }
+        .room-code-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text2); margin-bottom: 8px; }
+        .room-code-value {
+            font-family: var(--font-display);
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            background: linear-gradient(135deg, var(--accent2), var(--accent3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .participants-list { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
+        .participant-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: var(--bg3);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+        }
+        .participant-name { font-weight: 500; }
+        .participant-score { color: var(--accent3); font-family: var(--font-display); font-weight: 600; }
+        .current-question-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+        }
+        .question-progress { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+        .question-text {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            line-height: 1.3;
+        }
+        .answers-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .answer-preview {
+            padding: 14px 18px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .answer-preview.correct-answer { border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.08); color: var(--green); }
+        .answer-letter {
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            background: var(--bg2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .session-controls { display: flex; gap: 12px; flex-wrap: wrap; }
+
+        /* ══════════════════════════════════
+           PAGE: JOIN SESSION (PARTICIPANT)
+        ══════════════════════════════════ */
+        .join-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 40px;
+        }
+        .join-box { width: 100%; max-width: 480px; }
+        .join-title { font-family: var(--font-display); font-size: 36px; font-weight: 700; margin-bottom: 8px; }
+        .join-subtitle { color: var(--text2); margin-bottom: 32px; }
+
+        /* ══════════════════════════════════
+           PAGE: QUIZ (PARTICIPANT VIEW)
+        ══════════════════════════════════ */
+        .quiz-play-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 40px;
+        }
+        .quiz-play-box { width: 100%; max-width: 680px; }
+        .quiz-timer-bar {
+            height: 4px;
+            background: var(--bg3);
+            border-radius: 100px;
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+        .quiz-timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent3));
+            border-radius: 100px;
+            transition: width 1s linear;
+        }
+        .quiz-question-text {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            line-height: 1.3;
+        }
+        .quiz-answers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .quiz-answer-btn {
+            padding: 20px 24px;
+            background: var(--bg2);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            text-align: left;
+            font-family: var(--font-body);
+            font-size: 16px;
+            color: var(--text);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .quiz-answer-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(124,92,252,0.1); transform: translateY(-1px); }
+        .quiz-answer-btn.selected { border-color: var(--accent); background: rgba(124,92,252,0.15); }
+        .quiz-answer-btn.correct { border-color: var(--green); background: rgba(52,211,153,0.15); color: var(--green); }
+        .quiz-answer-btn.wrong { border-color: var(--red); background: rgba(248,113,113,0.1); color: var(--red); }
+        .quiz-answer-btn:disabled { cursor: not-allowed; }
+        .answer-key {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            background: var(--bg3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .score-popup {
+            text-align: center;
+            padding: 24px;
+            background: rgba(52,211,153,0.1);
+            border: 1px solid rgba(52,211,153,0.3);
+            border-radius: var(--radius);
+            margin-top: 24px;
+            animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        .score-popup-value { font-family: var(--font-display); font-size: 48px; font-weight: 800; color: var(--green); }
+        .score-popup-label { color: var(--text2); font-size: 14px; }
+        .waiting-screen {
+            text-align: center;
+            padding: 60px 40px;
+        }
+        .waiting-animation {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .waiting-dot {
+            width: 10px; height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+        .waiting-dot:nth-child(2) { animation-delay: 0.2s; }
+        .waiting-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%,100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(-12px); opacity: 1; } }
+
+        /* ══════════════════════════════════
+           PAGE: LEADERBOARD
+        ══════════════════════════════════ */
+        .leaderboard-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 40px;
+            flex: 1;
+        }
+        .leaderboard-title {
+            font-family: var(--font-display);
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .leaderboard-subtitle { color: var(--text2); margin-bottom: 48px; }
+        .leaderboard-list { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 12px; }
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 24px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            animation: fadeUp 0.4s ease both;
+        }
+        .leaderboard-item:nth-child(1) { border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.05); animation-delay: 0.1s; }
+        .leaderboard-item:nth-child(2) { animation-delay: 0.2s; }
+        .leaderboard-item:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .rank-number {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 800;
+            width: 40px;
+            text-align: center;
+        }
+        .rank-1 { color: var(--yellow); }
+        .rank-2 { color: #94a3b8; }
+        .rank-3 { color: #cd7f32; }
+        .leaderboard-name { flex: 1; font-size: 18px; font-weight: 500; }
+        .leaderboard-score {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent3);
+        }
+
+        /* ── MISC ── */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .gap-8 { gap: 8px; }
+        .gap-12 { gap: 12px; }
+        .gap-16 { gap: 16px; }
+        .gap-20 { gap: 20px; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .text-center { text-align: center; }
+        .text-sm { font-size: 13px; }
+        .text-muted { color: var(--text2); }
+        .mt-8 { margin-top: 8px; }
+        .mt-16 { margin-top: 16px; }
+        .mt-24 { margin-top: 24px; }
+        .w-full { width: 100%; }
+
+        @media (max-width: 768px) {
+            nav { padding: 16px 20px; }
+            .dashboard-layout { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .main-content { padding: 20px; }
+            .form-row { grid-template-columns: 1fr; }
+            .answers-grid { grid-template-columns: 1fr; }
+            .quiz-answers { grid-template-columns: 1fr; }
+            .session-layout { grid-template-columns: 1fr; padding: 20px; }
+            .answers-preview { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<!-- ══════════════════════════════════
+     MODAL: ADD QUESTION
+══════════════════════════════════ -->
+<div class="modal-overlay" id="modal-question">
+    <div class="modal">
+        <div class="modal-title">Добавить вопрос</div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="input-group">
+                <label class="input-label">Текст вопроса</label>
+                <textarea id="q-text" rows="3" placeholder="Введите вопрос..."></textarea>
+            </div>
+            <div class="input-group">
+                <label class="input-label">URL изображения (необязательно)</label>
+                <input type="url" id="q-image" placeholder="https://...">
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label class="input-label">Тип вопроса</label>
+                    <select id="q-type">
+                        <option value="single_choice">Один ответ</option>
+                        <option value="multiple_choice">Несколько ответов</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Время (сек)</label>
+                    <input type="number" id="q-time" value="30" min="5" max="300">
+                </div>
+            </div>
+            <div>
+                <div class="input-label" style="margin-bottom:10px;">Варианты ответов (нажми ● чтобы отметить правильный)</div>
+                <div style="display:flex;flex-direction:column;gap:8px;" id="answers-inputs">
+                    <div class="answer-input-row" data-idx="0">
+                        <button class="correct-toggle" onclick="toggleCorrect(this, 0)" title="Отметить правильным"></button>
+                        <input placeholder="Вариант A" />
+                    </div>
+                    <div class="answer-input-row" data-idx="1">
+                        <button class="correct-toggle" onclick="toggleCorrect(this, 1)" title="Отметить правильным"></button>
+                        <input placeholder="Вариант B" />
+                    </div>
+                    <div class="answer-input-row" data-idx="2">
+                        <button class="correct-toggle" onclick="toggleCorrect(this, 2)" title="Отметить правильным"></button>
+                        <input placeholder="Вариант C" />
+                    </div>
+                    <div class="answer-input-row" data-idx="3">
+                        <button class="correct-toggle" onclick="toggleCorrect(this, 3)" title="Отметить правильным"></button>
+                        <input placeholder="Вариант D" />
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-12 mt-16">
+                <button class="btn btn-primary w-full" onclick="saveQuestion()">Сохранить вопрос</button>
+                <button class="btn btn-secondary" onclick="closeModal('modal-question')">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: HOME
+══════════════════════════════════ -->
+<div class="page active" id="page-home">
+    <nav>
+        <div class="logo" onclick="showPage('home')">QEasy</div>
+        <div class="nav-actions">
+            <button class="btn btn-ghost btn-sm" onclick="showPage('join')">Войти по коду</button>
+            <button class="btn btn-secondary btn-sm" onclick="showPage('auth', 'login')">Войти</button>
+            <button class="btn btn-primary btn-sm" onclick="showPage('auth', 'register')">Регистрация</button>
+        </div>
+    </nav>
+    <div class="hero-glow"></div>
+    <div class="hero">
+        <div class="hero-tag"><span class="hero-dot"></span> Квизы в реальном времени</div>
+        <h1>Создавай. Играй.<br><span>Побеждай.</span></h1>
+        <p>Проводи интерактивные квизы с мгновенной синхронизацией, таймером и лидербордом.</p>
+        <div class="hero-actions">
+            <button class="btn btn-primary btn-lg" onclick="showPage('auth', 'register')">Создать квиз →</button>
+            <button class="btn btn-secondary btn-lg" onclick="showPage('join')">Присоединиться</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: AUTH
+══════════════════════════════════ -->
+<div class="page" id="page-auth">
+    <nav>
+        <div class="logo" onclick="showPage('home')">QEasy</div>
+    </nav>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px;">
+        <div class="auth-box">
+
+            <!-- LOGIN -->
+            <div id="auth-login">
+                <div class="auth-title">С возвращением</div>
+                <div class="auth-subtitle">Войди в свой аккаунт</div>
+                <div class="auth-form">
+                    <div class="input-group">
+                        <label class="input-label">Email</label>
+                        <input type="email" id="login-email" placeholder="you@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Пароль</label>
+                        <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+                    </div>
+                    <button class="btn btn-primary btn-lg w-full" onclick="doLogin()" id="btn-login">Войти</button>
+                </div>
+                <div class="auth-switch">Нет аккаунта? <a onclick="showAuthForm('register')">Зарегистрироваться</a></div>
+            </div>
+
+            <!-- REGISTER -->
+            <div id="auth-register" style="display:none;">
+                <div class="auth-title">Добро пожаловать</div>
+                <div class="auth-subtitle">Создай аккаунт бесплатно</div>
+                <div class="auth-form">
+                    <div class="input-group">
+                        <label class="input-label">Имя пользователя</label>
+                        <input type="text" id="reg-username" placeholder="username">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Email</label>
+                        <input type="email" id="reg-email" placeholder="you@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Пароль</label>
+                        <input type="password" id="reg-password" placeholder="минимум 6 символов" onkeydown="if(event.key==='Enter')doRegister()">
+                    </div>
+                    <button class="btn btn-primary btn-lg w-full" onclick="doRegister()" id="btn-register">Создать аккаунт</button>
+                </div>
+                <div class="auth-switch">Уже есть аккаунт? <a onclick="showAuthForm('login')">Войти</a></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: DASHBOARD
+══════════════════════════════════ -->
+<div class="page" id="page-dashboard">
+    <nav>
+        <div class="logo" onclick="showPage('home')">QEasy</div>
+        <div class="nav-actions">
+            <span class="text-muted text-sm" id="nav-username"></span>
+            <button class="btn btn-ghost btn-sm" onclick="doLogout()">Выйти</button>
+        </div>
+    </nav>
+    <div class="dashboard-layout">
+        <div class="sidebar">
+            <div class="sidebar-label">Меню</div>
+            <div class="sidebar-item active" onclick="switchTab('quizzes')" id="tab-btn-quizzes">
+                <span class="sidebar-icon">📋</span> Мои квизы
+            </div>
+            <div class="sidebar-item" onclick="switchTab('sessions')" id="tab-btn-sessions">
+                <span class="sidebar-icon">🎮</span> Сессии
+            </div>
+            <div class="sidebar-label">Действия</div>
+            <div class="sidebar-item" onclick="showPage('create-quiz')">
+                <span class="sidebar-icon">✨</span> Новый квиз
+            </div>
+            <div class="sidebar-item" onclick="showPage('join')">
+                <span class="sidebar-icon">🔗</span> Войти по коду
+            </div>
+        </div>
+        <div class="main-content">
+
+            <!-- TAB: QUIZZES -->
+            <div class="tab-content active" id="tab-quizzes">
+                <div class="content-header">
+                    <div>
+                        <div class="content-title">Мои квизы</div>
+                        <div class="content-subtitle">Управляй своими квизами</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="showPage('create-quiz')">+ Создать квиз</button>
+                </div>
+                <div class="quiz-grid" id="quizzes-grid">
+                    <div class="empty-state" style="grid-column:1/-1;">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: SESSIONS -->
+            <div class="tab-content" id="tab-sessions">
+                <div class="content-header">
+                    <div>
+                        <div class="content-title">Сессии</div>
+                        <div class="content-subtitle">История проведённых квизов</div>
+                    </div>
+                </div>
+                <div id="sessions-list">
+                    <div class="empty-state">
+                        <div class="empty-icon">🎮</div>
+                        <div class="empty-title">Нет активных сессий</div>
+                        <p>Запусти квиз чтобы начать сессию</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: CREATE QUIZ
+══════════════════════════════════ -->
+<div class="page" id="page-create-quiz">
+    <nav>
+        <div class="logo" onclick="showPage('home')">QEasy</div>
+        <div class="nav-actions">
+            <button class="btn btn-ghost btn-sm" onclick="showPage('dashboard')">← Назад</button>
+        </div>
+    </nav>
+    <div class="main-content">
+        <div class="create-layout">
+            <div class="content-header">
+                <div>
+                    <div class="content-title">Новый квиз</div>
+                    <div class="content-subtitle">Заполни информацию и добавь вопросы</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:24px;">
+                <div class="section-title">Основная информация</div>
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div class="input-group">
+                        <label class="input-label">Название квиза</label>
+                        <input type="text" id="quiz-title" placeholder="Например: История России">
+                    </div>
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label class="input-label">Категория</label>
+                            <input type="text" id="quiz-category" placeholder="Наука, История, Спорт...">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Время на вопрос (сек)</label>
+                            <input type="number" id="quiz-time" value="30" min="5" max="300">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:24px;">
+                <div class="flex justify-between items-center" style="margin-bottom:20px;">
+                    <div class="section-title" style="margin:0;">Вопросы <span id="questions-count" style="color:var(--accent3);font-size:14px;">(0)</span></div>
+                    <button class="btn btn-secondary btn-sm" onclick="openAddQuestion()">+ Добавить вопрос</button>
+                </div>
+                <div class="questions-list" id="questions-list">
+                    <div class="empty-state" style="padding:40px;">
+                        <div class="empty-icon">❓</div>
+                        <div class="empty-title">Нет вопросов</div>
+                        <p>Нажми "Добавить вопрос" чтобы начать</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-12">
+                <button class="btn btn-primary btn-lg" onclick="saveQuiz(false)">Сохранить как черновик</button>
+                <button class="btn btn-secondary btn-lg" onclick="saveQuiz(true)">Сохранить и опубликовать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: SESSION (ORGANIZER)
+══════════════════════════════════ -->
+<div class="page" id="page-session">
+    <nav>
+        <div class="logo" onclick="showPage('home')">QEasy</div>
+        <div class="nav-actions">
+            <span class="badge badge-active" id="session-status-badge">● Ожидание</span>
+            <button class="btn btn-ghost btn-sm" onclick="confirmLeaveSession()">Завершить</button>
+        </div>
+    </nav>
+    <div class="session-layout">
+        <div class="session-main">
+            <!-- Waiting state -->
+            <div id="organizer-waiting" class="current-question-card">
+                <div class="waiting-screen">
+                    <div class="waiting-animation">
+                        <div class="waiting-dot"></div>
+                        <div class="waiting-dot"></div>
+                        <div class="waiting-dot"></div>
+                    </div>
+                    <div class="content-title">Ожидание участников</div>
+                    <p class="text-muted mt-8">Поделись кодом комнаты — участники могут подключиться</p>
+                    <button class="btn btn-primary btn-lg mt-24" onclick="startSession()">Начать квиз →</button>
+                </div>
+            </div>
+            <!-- Active question state -->
+            <div id="organizer-question" class="current-question-card" style="display:none;">
+                <div class="question-progress" id="org-q-progress">Вопрос 1 из 5</div>
+                <div class="question-text" id="org-q-text">Текст вопроса</div>
+                <div id="org-q-image-wrap" style="display:none;margin-bottom:20px;">
+                    <img id="org-q-image" src="" style="max-width:100%;border-radius:12px;max-height:200px;object-fit:cover;">
+                </div>
+                <div class="answers-preview" id="org-answers"></div>
+                <div class="session-controls mt-24">
+                    <button class="btn btn-primary" onclick="nextQuestion()" id="btn-next-q">Следующий вопрос →</button>
+                    <button class="btn btn-danger" onclick="finishSession()">Завершить квиз</button>
+                </div>
+            </div>
+        </div>
+        <div class="session-sidebar-panel">
+            <div class="room-code-display">
+                <div class="room-code-label">Код комнаты</div>
+                <div class="room-code-value" id="display-room-code">——</div>
+                <button class="btn btn-ghost btn-sm mt-8" onclick="copyRoomCode()">📋 Скопировать</button>
+            </div>
+            <div class="card">
+                <div class="flex justify-between items-center" style="margin-bottom:12px;">
+                    <div style="font-weight:600;font-size:14px;">Участники</div>
+                    <span class="badge badge-active" id="participant-count">0</span>
+                </div>
+                <div class="participants-list" id="participants-list">
+                    <div class="text-muted text-sm text-center" style="padding:20px;">Ожидание подключения...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: JOIN SESSION
+══════════════════════════════════ -->
+<div class="page" id="page-join">
+    <nav>
+        <div class="logo" onclick="showPage('home')">QEasy</div>
+        <div class="nav-actions" id="join-nav-actions">
+            <button class="btn btn-secondary btn-sm" onclick="showPage('auth', 'login')">Войти</button>
+        </div>
+    </nav>
+    <div class="join-layout">
+        <div class="join-box card">
+            <div class="join-title">Присоединиться</div>
+            <div class="join-subtitle">Введи код комнаты чтобы войти в квиз</div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <div class="input-group">
+                    <label class="input-label">Код комнаты</label>
+                    <input type="text" id="join-room-code" placeholder="XXXXXX" style="font-family:var(--font-display);font-size:28px;letter-spacing:0.1em;text-transform:uppercase;text-align:center;" maxlength="6" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')doJoin()">
+                </div>
+                <button class="btn btn-primary btn-lg w-full" onclick="doJoin()" id="btn-join">Войти в квиз →</button>
+                <button class="btn btn-ghost btn-sm w-full" onclick="showPage('dashboard')" id="btn-to-dashboard" style="display:none;">← Мои квизы</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: QUIZ PLAY (PARTICIPANT)
+══════════════════════════════════ -->
+<div class="page" id="page-quiz-play">
+    <nav>
+        <div class="logo" onclick="showPage('home')">QEasy</div>
+        <div class="nav-actions">
+            <div class="flex items-center gap-12">
+                <span class="text-muted text-sm">Мои баллы:</span>
+                <span style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--accent3);" id="my-total-score">0</span>
+            </div>
+        </div>
+    </nav>
+    <div class="quiz-play-layout">
+        <div class="quiz-play-box">
+
+            <!-- Waiting for session start -->
+            <div id="play-waiting">
+                <div class="waiting-screen">
+                    <div class="waiting-animation">
+                        <div class="waiting-dot"></div>
+                        <div class="waiting-dot"></div>
+                        <div class="waiting-dot"></div>
+                    </div>
+                    <div class="content-title">Ожидание начала</div>
+                    <p class="text-muted mt-8">Организатор скоро запустит квиз</p>
+                    <div class="mt-24 flex gap-12 justify-center">
+                        <div class="badge badge-active">● Подключено</div>
+                        <div class="text-muted text-sm" id="play-room-display"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active question -->
+            <div id="play-question" style="display:none;">
+                <div class="quiz-timer-bar">
+                    <div class="quiz-timer-fill" id="timer-fill" style="width:100%;"></div>
+                </div>
+                <div class="question-progress text-muted text-sm" id="play-q-progress">Вопрос 1</div>
+                <div class="quiz-question-text" id="play-q-text">Вопрос</div>
+                <div id="play-q-image-wrap" style="display:none;margin-bottom:20px;">
+                    <img id="play-q-image" src="" style="max-width:100%;border-radius:12px;max-height:200px;object-fit:cover;">
+                </div>
+                <div class="quiz-answers" id="play-answers"></div>
+                <div id="score-result" style="display:none;"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PAGE: LEADERBOARD
+══════════════════════════════════ -->
+<div class="page" id="page-leaderboard">
+    <nav>
+        <div class="logo" onclick="showPage('home')">QEasy</div>
+        <div class="nav-actions">
+            <button class="btn btn-primary btn-sm" onclick="showPage('dashboard')">Мои квизы</button>
+        </div>
+    </nav>
+    <div class="leaderboard-layout">
+        <div class="leaderboard-title">🏆 Результаты</div>
+        <div class="leaderboard-subtitle" id="leaderboard-subtitle">Финальная таблица лидеров</div>
+        <div class="leaderboard-list" id="leaderboard-list"></div>
+        <div class="flex gap-12 mt-24">
+            <button class="btn btn-primary" onclick="showPage('dashboard')">Создать ещё квиз</button>
+            <button class="btn btn-secondary" onclick="showPage('join')">Сыграть ещё раз</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ══════════════════════════════════
+    // CONFIG
+    // ══════════════════════════════════
+    // const API = 'http://localhost:8080/api';
+    // const WS_BASE = 'ws://localhost:8080/api/ws';
+
+    const API = '/api';
+    const WS_BASE = 'ws://' + window.location.host + '/api/ws';
+
+    // ══════════════════════════════════
+    // STATE
+    // ══════════════════════════════════
+    let state = {
+        token: localStorage.getItem('token') || null,
+        user: JSON.parse(localStorage.getItem('user') || 'null'),
+        currentQuiz: null,       // квиз который создаём
+        pendingQuestions: [],     // вопросы до сохранения
+        ws: null,                 // WebSocket соединение
+        currentSession: null,     // { id, roomCode, quizId }
+        participantId: null,      // ID участника в сессии
+        currentQuestion: null,    // текущий вопрос
+        questionStartTime: null,  // время когда показали вопрос
+        timerInterval: null,      // интервал таймера
+        myTotalScore: 0,
+        isOrganizer: false,
+        quizData: null,           // полные данные квиза (для организатора)
+    };
+
+    // ══════════════════════════════════
+    // ROUTER
+    // ══════════════════════════════════
+    function showPage(page, sub) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const el = document.getElementById('page-' + page);
+        if (el) el.classList.add('active');
+
+        if (page === 'auth') showAuthForm(sub || 'login');
+        if (page === 'dashboard') {
+            updateNavUser();
+            loadQuizzes();
+            // показать кнопку "Мои квизы" в join
+            const btnD = document.getElementById('btn-to-dashboard');
+            if (btnD) btnD.style.display = state.token ? 'block' : 'none';
+        }
+        if (page === 'join') {
+            const btnD = document.getElementById('btn-to-dashboard');
+            if (btnD) btnD.style.display = state.token ? 'block' : 'none';
+            // обновить nav actions
+            const navA = document.getElementById('join-nav-actions');
+            if (navA) {
+                navA.innerHTML = state.token
+                    ? `<button class="btn btn-secondary btn-sm" onclick="showPage('dashboard')">← Дашборд</button>`
+                    : `<button class="btn btn-secondary btn-sm" onclick="showPage('auth','login')">Войти</button>`;
+            }
+        }
+        if (page === 'home' && state.token) {
+            // если авторизован — сразу на дашборд
+            showPage('dashboard');
+        }
+    }
+
+    // ══════════════════════════════════
+    // API HELPERS
+    // ══════════════════════════════════
+    async function api(method, path, body) {
+        const opts = {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+        };
+        if (state.token) opts.headers['Authorization'] = 'Bearer ' + state.token;
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(API + path, opts);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Ошибка запроса');
+        return data;
+    }
+
+    // ══════════════════════════════════
+    // TOAST
+    // ══════════════════════════════════
+    function toast(msg, type = 'info') {
+        const el = document.createElement('div');
+        el.className = `toast toast-${type}`;
+        el.textContent = msg;
+        document.getElementById('toast-container').appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+    }
+
+    // ══════════════════════════════════
+    // MODAL
+    // ══════════════════════════════════
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    // ══════════════════════════════════
+    // AUTH
+    // ══════════════════════════════════
+    function showAuthForm(form) {
+        document.getElementById('auth-login').style.display = form === 'login' ? 'block' : 'none';
+        document.getElementById('auth-register').style.display = form === 'register' ? 'block' : 'none';
+    }
+
+    async function doLogin() {
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        if (!email || !password) { toast('Заполни все поля', 'error'); return; }
+        const btn = document.getElementById('btn-login');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+        try {
+            const data = await api('POST', '/login', { email, password });
+            state.token = data.token;
+            localStorage.setItem('token', data.token);
+            // получаем профиль
+            const profile = await api('GET', '/profile');
+            state.user = profile;
+            localStorage.setItem('user', JSON.stringify(profile));
+            toast('Добро пожаловать!', 'success');
+            showPage('dashboard');
+        } catch(e) {
+            toast(e.message, 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Войти';
+        }
+    }
+
+    async function doRegister() {
+        const username = document.getElementById('reg-username').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value;
+        if (!username || !email || !password) { toast('Заполни все поля', 'error'); return; }
+        if (password.length < 6) { toast('Пароль минимум 6 символов', 'error'); return; }
+        const btn = document.getElementById('btn-register');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+        try {
+            await api('POST', '/register', { username, email, password });
+            // автоматически логинимся
+            const data = await api('POST', '/login', { email, password });
+            state.token = data.token;
+            localStorage.setItem('token', data.token);
+            const profile = await api('GET', '/profile');
+            state.user = profile;
+            localStorage.setItem('user', JSON.stringify(profile));
+            toast('Аккаунт создан!', 'success');
+            showPage('dashboard');
+        } catch(e) {
+            toast(e.message, 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Создать аккаунт';
+        }
+    }
+
+    function doLogout() {
+        state.token = null;
+        state.user = null;
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        showPage('home');
+        toast('Вышел из аккаунта', 'info');
+    }
+
+    function updateNavUser() {
+        const el = document.getElementById('nav-username');
+        if (el && state.user) el.textContent = state.user.username || state.user.email;
+    }
+
+    // ══════════════════════════════════
+    // DASHBOARD TABS
+    // ══════════════════════════════════
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('[id^="tab-btn-"]').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.getElementById('tab-btn-' + tab).classList.add('active');
+    }
+
+    // ══════════════════════════════════
+    // QUIZZES
+    // ══════════════════════════════════
+    async function loadQuizzes() {
+        if (!state.token) return;
+        const grid = document.getElementById('quizzes-grid');
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="spinner"></div></div>';
+        try {
+            const quizzes = await api('GET', '/quizzes');
+            if (!quizzes || quizzes.length === 0) {
+                grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">Нет квизов</div>
+          <p>Создай свой первый квиз</p>
+          <button class="btn btn-primary mt-16" onclick="showPage('create-quiz')">+ Создать квиз</button>
+        </div>`;
+                return;
+            }
+            grid.innerHTML = quizzes.map(q => `
+      <div class="quiz-card">
+        <div class="flex justify-between items-center" style="margin-bottom:8px;">
+          <span class="badge badge-${q.Status?.toLowerCase() || q.status?.toLowerCase() || 'draft'}">${statusLabel(q.Status || q.status)}</span>
+          <span class="text-muted text-sm">${q.Category || q.category || '—'}</span>
+        </div>
+        <div class="quiz-card-title">${q.Title || q.title}</div>
+        <div class="quiz-card-meta">
+          <span class="quiz-card-stat">⏱ ${q.TimePerQuestion || q.time_per_question}с</span>
+          <span class="quiz-card-stat">❓ ${(q.Questions || q.questions || []).length} вопросов</span>
+        </div>
+        <div class="quiz-card-actions">
+          <button class="btn btn-primary btn-sm" onclick="launchQuiz('${q.ID || q.id}')">▶ Запустить</button>
+          <button class="btn btn-secondary btn-sm" onclick="viewQuiz('${q.ID || q.id}')">Просмотр</button>
+        </div>
+      </div>
+    `).join('');
+        } catch(e) {
+            grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><p class="text-muted">Ошибка загрузки: ${e.message}</p></div>`;
+        }
+    }
+
+    function statusLabel(s) {
+        const map = { draft: 'Черновик', published: 'Опубликован', active: 'Активен', finished: 'Завершён' };
+        return map[s] || s || 'Черновик';
+    }
+
+    async function viewQuiz(id) {
+        try {
+            const quiz = await api('GET', '/quizzes/' + id);
+            toast(`Квиз: ${quiz.Title || quiz.title} — ${(quiz.Questions || quiz.questions || []).length} вопросов`, 'info');
+        } catch(e) { toast(e.message, 'error'); }
+    }
+
+    async function launchQuiz(quizId) {
+        try {
+            const session = await api('POST', '/sessions', { quiz_id: quizId });
+            state.currentSession = { id: session.session_id, roomCode: session.room_code, quizId };
+            state.isOrganizer = true;
+            // загружаем данные квиза для отображения вопросов
+            state.quizData = await api('GET', '/quizzes/' + quizId);
+            setupOrganizerSession();
+        } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ══════════════════════════════════
+    // CREATE QUIZ
+    // ══════════════════════════════════
+    function openAddQuestion() {
+        // сбросить форму
+        document.getElementById('q-text').value = '';
+        document.getElementById('q-image').value = '';
+        document.getElementById('q-type').value = 'single_choice';
+        document.getElementById('q-time').value = '30';
+        document.querySelectorAll('#answers-inputs .answer-input-row input').forEach(i => i.value = '');
+        document.querySelectorAll('.correct-toggle').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.answer-input-row').forEach(r => r.classList.remove('correct'));
+        openModal('modal-question');
+    }
+
+    function toggleCorrect(btn, idx) {
+        const qType = document.getElementById('q-type').value;
+        if (qType === 'single_choice') {
+            // снимаем со всех
+            document.querySelectorAll('.correct-toggle').forEach(b => { b.classList.remove('active'); b.closest('.answer-input-row').classList.remove('correct'); });
+        }
+        btn.classList.toggle('active');
+        btn.closest('.answer-input-row').classList.toggle('correct');
+    }
+
+    function saveQuestion() {
+        const text = document.getElementById('q-text').value.trim();
+        const image = document.getElementById('q-image').value.trim();
+        const type = document.getElementById('q-type').value;
+        const timeLimit = parseInt(document.getElementById('q-time').value) || 30;
+        if (!text) { toast('Введи текст вопроса', 'error'); return; }
+
+        const rows = document.querySelectorAll('#answers-inputs .answer-input-row');
+        const answers = [];
+        rows.forEach(row => {
+            const val = row.querySelector('input').value.trim();
+            const isCorrect = row.querySelector('.correct-toggle').classList.contains('active');
+            if (val) answers.push({ text: val, is_correct: isCorrect });
+        });
+
+        if (answers.length < 2) { toast('Добавь минимум 2 варианта ответа', 'error'); return; }
+        if (!answers.some(a => a.is_correct)) { toast('Отметь хотя бы один правильный ответ', 'error'); return; }
+
+        state.pendingQuestions.push({ text, image_url: image, type, time_limit: timeLimit, answers });
+        renderPendingQuestions();
+        closeModal('modal-question');
+        toast('Вопрос добавлен', 'success');
+    }
+
+    function renderPendingQuestions() {
+        const list = document.getElementById('questions-list');
+        const count = document.getElementById('questions-count');
+        count.textContent = `(${state.pendingQuestions.length})`;
+        if (state.pendingQuestions.length === 0) {
+            list.innerHTML = `<div class="empty-state" style="padding:40px;"><div class="empty-icon">❓</div><div class="empty-title">Нет вопросов</div></div>`;
+            return;
+        }
+        const letters = ['A','B','C','D'];
+        list.innerHTML = state.pendingQuestions.map((q, i) => `
+    <div class="question-item">
+      <div class="question-number">Вопрос ${i+1}</div>
+      <div style="font-weight:500;margin-bottom:12px;">${q.text}</div>
+      ${q.image_url ? `<div style="font-size:12px;color:var(--text2);margin-bottom:8px;">🖼 ${q.image_url}</div>` : ''}
+      <div class="answers-grid">
+        ${q.answers.map((a, ai) => `
+          <div class="answer-input-row ${a.is_correct ? 'correct' : ''}" style="cursor:default;">
+            <div style="width:20px;text-align:center;font-size:12px;font-weight:600;color:${a.is_correct ? 'var(--green)' : 'var(--text2)'};">${letters[ai]}</div>
+            <span style="font-size:14px;">${a.text}</span>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn btn-danger btn-sm" style="margin-top:12px;" onclick="removeQuestion(${i})">Удалить</button>
+    </div>
+  `).join('');
+    }
+
+    function removeQuestion(idx) {
+        state.pendingQuestions.splice(idx, 1);
+        renderPendingQuestions();
+    }
+
+    async function saveQuiz(publish) {
+        const title = document.getElementById('quiz-title').value.trim();
+        const category = document.getElementById('quiz-category').value.trim();
+        const timePerQuestion = parseInt(document.getElementById('quiz-time').value) || 30;
+        if (!title) { toast('Введи название квиза', 'error'); return; }
+        if (state.pendingQuestions.length === 0) { toast('Добавь хотя бы один вопрос', 'error'); return; }
+
+        try {
+            // создаём квиз
+            const quiz = await api('POST', '/quizzes', { title, category, time_per_question: timePerQuestion });
+            const quizId = quiz.ID || quiz.id;
+
+            // добавляем вопросы
+            for (const q of state.pendingQuestions) {
+                await api('POST', `/quizzes/${quizId}/questions`, q);
+            }
+
+            // публикуем если нужно
+            if (publish) {
+                await api('POST', `/quizzes/${quizId}/publish`);
+            }
+
+            state.pendingQuestions = [];
+            toast(publish ? 'Квиз опубликован!' : 'Черновик сохранён', 'success');
+            showPage('dashboard');
+        } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ══════════════════════════════════
+    // SESSION — ORGANIZER
+    // ══════════════════════════════════
+    function setupOrganizerSession() {
+        document.getElementById('display-room-code').textContent = state.currentSession.roomCode;
+        document.getElementById('organizer-waiting').style.display = 'block';
+        document.getElementById('organizer-question').style.display = 'none';
+        document.getElementById('session-status-badge').textContent = '● Ожидание';
+        document.getElementById('participants-list').innerHTML = '<div class="text-muted text-sm text-center" style="padding:20px;">Ожидание подключения...</div>';
+        showPage('session');
+        connectWebSocket(true);
+    }
+
+    function connectWebSocket(isOrganizer) {
+        if (state.ws) { state.ws.close(); state.ws = null; }
+        const url = `${WS_BASE}/${state.currentSession.id}?token=${state.token}`;
+        state.ws = new WebSocket(url);
+
+        state.ws.onopen = () => {
+            toast('Подключено к сессии', 'success');
+        };
+
+        state.ws.onmessage = (e) => {
+            const event = JSON.parse(e.data);
+            handleWsEvent(event, isOrganizer);
+        };
+
+        state.ws.onclose = () => {
+            toast('Соединение закрыто', 'info');
+        };
+
+        state.ws.onerror = () => {
+            toast('Ошибка WebSocket соединения', 'error');
+        };
+    }
+
+    function sendWs(type, payload = {}) {
+        if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+            state.ws.send(JSON.stringify({ type, payload }));
+        } else {
+            toast('Нет соединения с сервером', 'error');
+        }
+    }
+
+    function handleWsEvent(event, isOrganizer) {
+        switch(event.type) {
+            case 'session_started':
+            case 'next_question':
+                showQuestion(event.payload, isOrganizer);
+                break;
+            case 'answer_submitted':
+                showScoreResult(event.payload.score);
+                break;
+            case 'leaderboard':
+                showLeaderboard(event.payload);
+                break;
+            case 'error':
+                toast(event.payload.message || 'Ошибка сервера', 'error');
+                break;
+        }
+    }
+
+    function showQuestion(q, isOrganizer) {
+        state.currentQuestion = q;
+        state.questionStartTime = Date.now();
+        const letters = ['A','B','C','D'];
+
+        if (isOrganizer) {
+            document.getElementById('organizer-waiting').style.display = 'none';
+            document.getElementById('organizer-question').style.display = 'block';
+            document.getElementById('session-status-badge').textContent = '● Активен';
+
+            const questions = state.quizData ? (state.quizData.Questions || state.quizData.questions || []) : [];
+            const total = questions.length;
+            const idx = q.question_index !== undefined ? q.question_index : 0;
+            document.getElementById('org-q-progress').textContent = `Вопрос ${idx+1} из ${total}`;
+            document.getElementById('org-q-text').textContent = q.text;
+
+            if (q.image_url) {
+                document.getElementById('org-q-image').src = q.image_url;
+                document.getElementById('org-q-image-wrap').style.display = 'block';
+            } else {
+                document.getElementById('org-q-image-wrap').style.display = 'none';
+            }
+
+            const answersEl = document.getElementById('org-answers');
+            answersEl.innerHTML = (q.answers || []).map((a, i) => `
+      <div class="answer-preview ${a.is_correct ? 'correct-answer' : ''}">
+        <div class="answer-letter">${letters[i]}</div>
+        <span>${a.text}</span>
+        ${a.is_correct ? '<span style="margin-left:auto;font-size:12px;">✓</span>' : ''}
+      </div>
+    `).join('');
+
+            // обновляем счёт участников
+            refreshParticipants();
+        } else {
+            // участник
+            document.getElementById('play-waiting').style.display = 'none';
+            document.getElementById('play-question').style.display = 'block';
+            document.getElementById('score-result').style.display = 'none';
+            document.getElementById('score-result').innerHTML = '';
+
+            const idx = q.question_index !== undefined ? q.question_index : 0;
+            document.getElementById('play-q-progress').textContent = `Вопрос ${idx+1}`;
+            document.getElementById('play-q-text').textContent = q.text;
+
+            if (q.image_url) {
+                document.getElementById('play-q-image').src = q.image_url;
+                document.getElementById('play-q-image-wrap').style.display = 'block';
+            } else {
+                document.getElementById('play-q-image-wrap').style.display = 'none';
+            }
+
+            const answersEl = document.getElementById('play-answers');
+            answersEl.innerHTML = (q.answers || []).map((a, i) => `
+      <button class="quiz-answer-btn" onclick="submitAnswer('${a.id}', this)" data-answer-id="${a.id}">
+        <div class="answer-key">${letters[i]}</div>
+        <span>${a.text}</span>
+      </button>
+    `).join('');
+
+            startTimer(q.time_limit || 30);
+        }
+    }
+
+    function startTimer(seconds) {
+        clearInterval(state.timerInterval);
+        const fill = document.getElementById('timer-fill');
+        const start = Date.now();
+        fill.style.width = '100%';
+        fill.style.background = 'linear-gradient(90deg, var(--accent), var(--accent3))';
+
+        state.timerInterval = setInterval(() => {
+            const elapsed = (Date.now() - start) / 1000;
+            const pct = Math.max(0, 100 - (elapsed / seconds * 100));
+            fill.style.width = pct + '%';
+            if (pct < 30) fill.style.background = 'linear-gradient(90deg, var(--red), #fbbf24)';
+            if (pct <= 0) {
+                clearInterval(state.timerInterval);
+                // дизейблим кнопки
+                document.querySelectorAll('.quiz-answer-btn').forEach(b => b.disabled = true);
+            }
+        }, 100);
+    }
+
+    function submitAnswer(answerId, btn) {
+        if (!state.currentQuestion || !state.participantId) return;
+        const responseTimeMs = Date.now() - state.questionStartTime;
+        clearInterval(state.timerInterval);
+
+        // дизейблим все кнопки
+        document.querySelectorAll('.quiz-answer-btn').forEach(b => { b.disabled = true; });
+        btn.classList.add('selected');
+
+        sendWs('submit_answer', {
+            question_id: state.currentQuestion.question_id || '',
+            answer_id: answerId,
+            response_time_ms: responseTimeMs,
+            participant_id: state.participantId,
+        });
+    }
+
+    function showScoreResult(score) {
+        const el = document.getElementById('score-result');
+        el.style.display = 'block';
+        state.myTotalScore += score;
+        document.getElementById('my-total-score').textContent = state.myTotalScore;
+        el.innerHTML = score > 0
+            ? `<div class="score-popup"><div class="score-popup-value">+${score}</div><div class="score-popup-label">баллов за этот вопрос</div></div>`
+            : `<div class="score-popup" style="background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.3);"><div class="score-popup-value" style="color:var(--red);">0</div><div class="score-popup-label">Неправильно или время вышло</div></div>`;
+    }
+
+    function startSession() { sendWs('start_session'); }
+
+    function nextQuestion() { sendWs('next_question'); }
+
+    function finishSession() {
+        if (confirm('Завершить квиз и показать результаты?')) {
+            sendWs('finish_session');
+        }
+    }
+
+    function confirmLeaveSession() {
+        if (confirm('Завершить сессию?')) {
+            finishSession();
+        }
+    }
+
+    function copyRoomCode() {
+        navigator.clipboard.writeText(state.currentSession?.roomCode || '');
+        toast('Код скопирован!', 'success');
+    }
+
+    async function refreshParticipants() {
+        // в реальном приложении это можно делать через WS событие
+        // пока просто показываем заглушку
+    }
+
+    // ══════════════════════════════════
+    // JOIN SESSION — PARTICIPANT
+    // ══════════════════════════════════
+    async function doJoin() {
+        if (!state.token) { toast('Войди в аккаунт чтобы участвовать', 'error'); showPage('auth', 'login'); return; }
+        const roomCode = document.getElementById('join-room-code').value.trim().toUpperCase();
+        if (roomCode.length < 4) { toast('Введи код комнаты', 'error'); return; }
+
+        const btn = document.getElementById('btn-join');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+
+        try {
+            const data = await api('POST', '/sessions/join', { room_code: roomCode });
+            state.participantId = data.participant_id;
+            state.currentSession = { id: data.session_id, roomCode };
+            state.isOrganizer = false;
+            state.myTotalScore = 0;
+
+            document.getElementById('play-room-display').textContent = `Комната: ${roomCode}`;
+            document.getElementById('my-total-score').textContent = '0';
+            document.getElementById('play-waiting').style.display = 'block';
+            document.getElementById('play-question').style.display = 'none';
+            showPage('quiz-play');
+            connectWebSocket(false);
+            toast('Подключился к квизу!', 'success');
+        } catch(e) {
+            toast(e.message, 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Войти в квиз →';
+        }
+    }
+
+    // ══════════════════════════════════
+    // LEADERBOARD
+    // ══════════════════════════════════
+    function showLeaderboard(participants) {
+        clearInterval(state.timerInterval);
+        if (state.ws) { state.ws.close(); state.ws = null; }
+
+        const list = document.getElementById('leaderboard-list');
+        if (!participants || participants.length === 0) {
+            list.innerHTML = `<div class="empty-state"><div class="empty-icon">😔</div><div class="empty-title">Нет результатов</div><p>Никто не отвечал на вопросы</p></div>`;
+        } else {
+            const rankEmojis = ['🥇','🥈','🥉'];
+            list.innerHTML = participants.map((p, i) => `
+      <div class="leaderboard-item">
+        <div class="rank-number rank-${i+1}">${rankEmojis[i] || (i+1)}</div>
+        <div class="leaderboard-name">${p.UserID || p.user_id || 'Участник ' + (i+1)}</div>
+        <div class="leaderboard-score">${p.TotalScore || p.total_score || 0}</div>
+      </div>
+    `).join('');
+        }
+
+        showPage('leaderboard');
+    }
+
+    // ══════════════════════════════════
+    // INIT
+    // ══════════════════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+        state.pendingQuestions = [];
+
+        // если уже авторизован — сразу на дашборд
+        if (state.token && state.user) {
+            showPage('dashboard');
+        }
+    });
+</script>
+</body>
+</html>
