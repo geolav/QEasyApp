@@ -806,8 +806,8 @@
                 <div class="auth-subtitle">Войди в свой аккаунт</div>
                 <div class="auth-form">
                     <div class="input-group">
-                        <label class="input-label">Email</label>
-                        <input type="email" id="login-email" placeholder="you@example.com">
+                        <label class="input-label">Имя пользователя</label>
+                        <input type="text" id="login-username" placeholder="username">
                     </div>
                     <div class="input-group">
                         <label class="input-label">Пароль</label>
@@ -1129,13 +1129,11 @@
     </div>
 </div>
 
+
 <script>
     // ══════════════════════════════════
     // CONFIG
     // ══════════════════════════════════
-    // const API = 'http://localhost:8080/api';
-    // const WS_BASE = 'ws://localhost:8080/api/ws';
-
     const API = '/api';
     const WS_BASE = 'ws://' + window.location.host + '/api/ws';
 
@@ -1145,17 +1143,19 @@
     let state = {
         token: localStorage.getItem('token') || null,
         user: JSON.parse(localStorage.getItem('user') || 'null'),
-        currentQuiz: null,       // квиз который создаём
-        pendingQuestions: [],     // вопросы до сохранения
-        ws: null,                 // WebSocket соединение
-        currentSession: null,     // { id, roomCode, quizId }
-        participantId: null,      // ID участника в сессии
-        currentQuestion: null,    // текущий вопрос
-        questionStartTime: null,  // время когда показали вопрос
-        timerInterval: null,      // интервал таймера
+        currentQuiz: null,
+        pendingQuestions: [],
+        ws: null,
+        currentSession: null,      // { id, roomCode, quizId }
+        participantId: null,
+        currentQuestion: null,
+        currentQuestionId: null,   // ID текущего вопроса для submit
+        questionStartTime: null,
+        timerInterval: null,
         myTotalScore: 0,
         isOrganizer: false,
-        quizData: null,           // полные данные квиза (для организатора)
+        quizData: null,
+        returnTo: null,            // куда вернуть после логина ('join')
     };
 
     // ══════════════════════════════════
@@ -1170,23 +1170,18 @@
         if (page === 'dashboard') {
             updateNavUser();
             loadQuizzes();
-            // показать кнопку "Мои квизы" в join
-            const btnD = document.getElementById('btn-to-dashboard');
-            if (btnD) btnD.style.display = state.token ? 'block' : 'none';
         }
         if (page === 'join') {
             const btnD = document.getElementById('btn-to-dashboard');
             if (btnD) btnD.style.display = state.token ? 'block' : 'none';
-            // обновить nav actions
             const navA = document.getElementById('join-nav-actions');
             if (navA) {
                 navA.innerHTML = state.token
                     ? `<button class="btn btn-secondary btn-sm" onclick="showPage('dashboard')">← Дашборд</button>`
-                    : `<button class="btn btn-secondary btn-sm" onclick="showPage('auth','login')">Войти</button>`;
+                    : `<button class="btn btn-secondary btn-sm" onclick="goToLoginFromJoin()">Войти</button>`;
             }
         }
         if (page === 'home' && state.token) {
-            // если авторизован — сразу на дашборд
             showPage('dashboard');
         }
     }
@@ -1232,22 +1227,30 @@
         document.getElementById('auth-register').style.display = form === 'register' ? 'block' : 'none';
     }
 
+    // Вызывается когда нажали "Войти" со страницы join
+    function goToLoginFromJoin() {
+        state.returnTo = 'join';
+        showPage('auth', 'login');
+    }
+
     async function doLogin() {
-        const email = document.getElementById('login-email').value.trim();
+        const username = document.getElementById('login-username').value.trim();
         const password = document.getElementById('login-password').value;
-        if (!email || !password) { toast('Заполни все поля', 'error'); return; }
+        if (!username || !password) { toast('Заполни все поля', 'error'); return; }
         const btn = document.getElementById('btn-login');
         btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
         try {
-            const data = await api('POST', '/login', { email, password });
+            const data = await api('POST', '/login', { username, password });
             state.token = data.token;
             localStorage.setItem('token', data.token);
-            // получаем профиль
             const profile = await api('GET', '/profile');
             state.user = profile;
             localStorage.setItem('user', JSON.stringify(profile));
             toast('Добро пожаловать!', 'success');
-            showPage('dashboard');
+            // возвращаем туда откуда пришли
+            const ret = state.returnTo;
+            state.returnTo = null;
+            showPage(ret || 'dashboard');
         } catch(e) {
             toast(e.message, 'error');
         } finally {
@@ -1265,15 +1268,16 @@
         btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
         try {
             await api('POST', '/register', { username, email, password });
-            // автоматически логинимся
-            const data = await api('POST', '/login', { email, password });
+            const data = await api('POST', '/login', { username, password });
             state.token = data.token;
             localStorage.setItem('token', data.token);
             const profile = await api('GET', '/profile');
             state.user = profile;
             localStorage.setItem('user', JSON.stringify(profile));
             toast('Аккаунт создан!', 'success');
-            showPage('dashboard');
+            const ret = state.returnTo;
+            state.returnTo = null;
+            showPage(ret || 'dashboard');
         } catch(e) {
             toast(e.message, 'error');
         } finally {
@@ -1327,17 +1331,17 @@
             grid.innerHTML = quizzes.map(q => `
       <div class="quiz-card">
         <div class="flex justify-between items-center" style="margin-bottom:8px;">
-          <span class="badge badge-${q.Status?.toLowerCase() || q.status?.toLowerCase() || 'draft'}">${statusLabel(q.Status || q.status)}</span>
-          <span class="text-muted text-sm">${q.Category || q.category || '—'}</span>
+          <span class="badge badge-${(q.Status||q.status||'draft').toLowerCase()}">${statusLabel(q.Status||q.status)}</span>
+          <span class="text-muted text-sm">${q.Category||q.category||'—'}</span>
         </div>
-        <div class="quiz-card-title">${q.Title || q.title}</div>
+        <div class="quiz-card-title">${q.Title||q.title}</div>
         <div class="quiz-card-meta">
-          <span class="quiz-card-stat">⏱ ${q.TimePerQuestion || q.time_per_question}с</span>
-          <span class="quiz-card-stat">❓ ${(q.Questions || q.questions || []).length} вопросов</span>
+          <span class="quiz-card-stat">⏱ ${q.TimePerQuestion||q.time_per_question}с</span>
+          <span class="quiz-card-stat">❓ ${(q.Questions||q.questions||[]).length} вопросов</span>
         </div>
         <div class="quiz-card-actions">
-          <button class="btn btn-primary btn-sm" onclick="launchQuiz('${q.ID || q.id}')">▶ Запустить</button>
-          <button class="btn btn-secondary btn-sm" onclick="viewQuiz('${q.ID || q.id}')">Просмотр</button>
+          <button class="btn btn-primary btn-sm" onclick="launchQuiz('${q.ID||q.id}')">▶ Запустить</button>
+          <button class="btn btn-secondary btn-sm" onclick="viewQuiz('${q.ID||q.id}')">Просмотр</button>
         </div>
       </div>
     `).join('');
@@ -1354,7 +1358,7 @@
     async function viewQuiz(id) {
         try {
             const quiz = await api('GET', '/quizzes/' + id);
-            toast(`Квиз: ${quiz.Title || quiz.title} — ${(quiz.Questions || quiz.questions || []).length} вопросов`, 'info');
+            toast(`${quiz.Title||quiz.title} — ${(quiz.Questions||quiz.questions||[]).length} вопросов`, 'info');
         } catch(e) { toast(e.message, 'error'); }
     }
 
@@ -1363,7 +1367,6 @@
             const session = await api('POST', '/sessions', { quiz_id: quizId });
             state.currentSession = { id: session.session_id, roomCode: session.room_code, quizId };
             state.isOrganizer = true;
-            // загружаем данные квиза для отображения вопросов
             state.quizData = await api('GET', '/quizzes/' + quizId);
             setupOrganizerSession();
         } catch(e) { toast(e.message, 'error'); }
@@ -1373,7 +1376,6 @@
     // CREATE QUIZ
     // ══════════════════════════════════
     function openAddQuestion() {
-        // сбросить форму
         document.getElementById('q-text').value = '';
         document.getElementById('q-image').value = '';
         document.getElementById('q-type').value = 'single_choice';
@@ -1387,8 +1389,10 @@
     function toggleCorrect(btn, idx) {
         const qType = document.getElementById('q-type').value;
         if (qType === 'single_choice') {
-            // снимаем со всех
-            document.querySelectorAll('.correct-toggle').forEach(b => { b.classList.remove('active'); b.closest('.answer-input-row').classList.remove('correct'); });
+            document.querySelectorAll('.correct-toggle').forEach(b => {
+                b.classList.remove('active');
+                b.closest('.answer-input-row').classList.remove('correct');
+            });
         }
         btn.classList.toggle('active');
         btn.closest('.answer-input-row').classList.toggle('correct');
@@ -1435,7 +1439,7 @@
       <div class="answers-grid">
         ${q.answers.map((a, ai) => `
           <div class="answer-input-row ${a.is_correct ? 'correct' : ''}" style="cursor:default;">
-            <div style="width:20px;text-align:center;font-size:12px;font-weight:600;color:${a.is_correct ? 'var(--green)' : 'var(--text2)'};">${letters[ai]}</div>
+            <div style="width:20px;text-align:center;font-size:12px;font-weight:600;color:${a.is_correct ? 'var(--green)' : 'var(--text2)'};">${letters[ai]||'?'}</div>
             <span style="font-size:14px;">${a.text}</span>
           </div>
         `).join('')}
@@ -1458,20 +1462,14 @@
         if (state.pendingQuestions.length === 0) { toast('Добавь хотя бы один вопрос', 'error'); return; }
 
         try {
-            // создаём квиз
             const quiz = await api('POST', '/quizzes', { title, category, time_per_question: timePerQuestion });
             const quizId = quiz.ID || quiz.id;
-
-            // добавляем вопросы
             for (const q of state.pendingQuestions) {
                 await api('POST', `/quizzes/${quizId}/questions`, q);
             }
-
-            // публикуем если нужно
             if (publish) {
                 await api('POST', `/quizzes/${quizId}/publish`);
             }
-
             state.pendingQuestions = [];
             toast(publish ? 'Квиз опубликован!' : 'Черновик сохранён', 'success');
             showPage('dashboard');
@@ -1496,22 +1494,17 @@
         const url = `${WS_BASE}/${state.currentSession.id}?token=${state.token}`;
         state.ws = new WebSocket(url);
 
-        state.ws.onopen = () => {
-            toast('Подключено к сессии', 'success');
-        };
+        state.ws.onopen = () => toast('Подключено к сессии', 'success');
 
         state.ws.onmessage = (e) => {
-            const event = JSON.parse(e.data);
-            handleWsEvent(event, isOrganizer);
+            try {
+                const event = JSON.parse(e.data);
+                handleWsEvent(event, isOrganizer);
+            } catch(err) { console.error('WS parse error', err); }
         };
 
-        state.ws.onclose = () => {
-            toast('Соединение закрыто', 'info');
-        };
-
-        state.ws.onerror = () => {
-            toast('Ошибка WebSocket соединения', 'error');
-        };
+        state.ws.onclose = () => toast('Соединение закрыто', 'info');
+        state.ws.onerror = () => toast('Ошибка WebSocket', 'error');
     }
 
     function sendWs(type, payload = {}) {
@@ -1542,6 +1535,8 @@
 
     function showQuestion(q, isOrganizer) {
         state.currentQuestion = q;
+        // сохраняем question_id из payload (бэкенд должен его слать)
+        state.currentQuestionId = q.question_id || '';
         state.questionStartTime = Date.now();
         const letters = ['A','B','C','D'];
 
@@ -1563,8 +1558,7 @@
                 document.getElementById('org-q-image-wrap').style.display = 'none';
             }
 
-            const answersEl = document.getElementById('org-answers');
-            answersEl.innerHTML = (q.answers || []).map((a, i) => `
+            document.getElementById('org-answers').innerHTML = (q.answers || []).map((a, i) => `
       <div class="answer-preview ${a.is_correct ? 'correct-answer' : ''}">
         <div class="answer-letter">${letters[i]}</div>
         <span>${a.text}</span>
@@ -1572,10 +1566,7 @@
       </div>
     `).join('');
 
-            // обновляем счёт участников
-            refreshParticipants();
         } else {
-            // участник
             document.getElementById('play-waiting').style.display = 'none';
             document.getElementById('play-question').style.display = 'block';
             document.getElementById('score-result').style.display = 'none';
@@ -1592,8 +1583,7 @@
                 document.getElementById('play-q-image-wrap').style.display = 'none';
             }
 
-            const answersEl = document.getElementById('play-answers');
-            answersEl.innerHTML = (q.answers || []).map((a, i) => `
+            document.getElementById('play-answers').innerHTML = (q.answers || []).map((a, i) => `
       <button class="quiz-answer-btn" onclick="submitAnswer('${a.id}', this)" data-answer-id="${a.id}">
         <div class="answer-key">${letters[i]}</div>
         <span>${a.text}</span>
@@ -1618,23 +1608,20 @@
             if (pct < 30) fill.style.background = 'linear-gradient(90deg, var(--red), #fbbf24)';
             if (pct <= 0) {
                 clearInterval(state.timerInterval);
-                // дизейблим кнопки
                 document.querySelectorAll('.quiz-answer-btn').forEach(b => b.disabled = true);
             }
         }, 100);
     }
 
     function submitAnswer(answerId, btn) {
-        if (!state.currentQuestion || !state.participantId) return;
+        if (!state.participantId) { toast('Нет ID участника', 'error'); return; }
         const responseTimeMs = Date.now() - state.questionStartTime;
         clearInterval(state.timerInterval);
-
-        // дизейблим все кнопки
-        document.querySelectorAll('.quiz-answer-btn').forEach(b => { b.disabled = true; });
+        document.querySelectorAll('.quiz-answer-btn').forEach(b => b.disabled = true);
         btn.classList.add('selected');
 
         sendWs('submit_answer', {
-            question_id: state.currentQuestion.question_id || '',
+            question_id: state.currentQuestionId,
             answer_id: answerId,
             response_time_ms: responseTimeMs,
             participant_id: state.participantId,
@@ -1652,19 +1639,13 @@
     }
 
     function startSession() { sendWs('start_session'); }
-
     function nextQuestion() { sendWs('next_question'); }
 
     function finishSession() {
-        if (confirm('Завершить квиз и показать результаты?')) {
-            sendWs('finish_session');
-        }
+        if (confirm('Завершить квиз и показать результаты?')) sendWs('finish_session');
     }
-
     function confirmLeaveSession() {
-        if (confirm('Завершить сессию?')) {
-            finishSession();
-        }
+        if (confirm('Завершить сессию?')) finishSession();
     }
 
     function copyRoomCode() {
@@ -1672,16 +1653,16 @@
         toast('Код скопирован!', 'success');
     }
 
-    async function refreshParticipants() {
-        // в реальном приложении это можно делать через WS событие
-        // пока просто показываем заглушку
-    }
-
     // ══════════════════════════════════
     // JOIN SESSION — PARTICIPANT
     // ══════════════════════════════════
     async function doJoin() {
-        if (!state.token) { toast('Войди в аккаунт чтобы участвовать', 'error'); showPage('auth', 'login'); return; }
+        if (!state.token) {
+            state.returnTo = 'join';
+            toast('Сначала войди в аккаунт', 'error');
+            showPage('auth', 'login');
+            return;
+        }
         const roomCode = document.getElementById('join-room-code').value.trim().toUpperCase();
         if (roomCode.length < 4) { toast('Введи код комнаты', 'error'); return; }
 
@@ -1724,7 +1705,7 @@
             list.innerHTML = participants.map((p, i) => `
       <div class="leaderboard-item">
         <div class="rank-number rank-${i+1}">${rankEmojis[i] || (i+1)}</div>
-        <div class="leaderboard-name">${p.UserID || p.user_id || 'Участник ' + (i+1)}</div>
+        <div class="leaderboard-name">${p.Username || p.username || p.UserID || p.user_id || 'Участник ' + (i+1)}</div>
         <div class="leaderboard-score">${p.TotalScore || p.total_score || 0}</div>
       </div>
     `).join('');
@@ -1738,8 +1719,6 @@
     // ══════════════════════════════════
     document.addEventListener('DOMContentLoaded', () => {
         state.pendingQuestions = [];
-
-        // если уже авторизован — сразу на дашборд
         if (state.token && state.user) {
             showPage('dashboard');
         }
