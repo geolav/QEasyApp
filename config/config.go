@@ -15,7 +15,7 @@ type Config struct {
 func LoadConfig() *Config {
 	return &Config{
 		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
+		DBPort:     getEnv("DB_PORT", "5433"),
 		DBUser:     getEnv("DB_USER", "postgres"),
 		DBPassword: getEnv("DB_PASSWORD", "postgres"),
 		DBName:     getEnv("DB_NAME", "qeasyapp"),
