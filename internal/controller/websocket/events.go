@@ -20,6 +20,7 @@ func (h *WSHandler) handleStartSession(client *Client) {
 	data, _ := json.Marshal(Event{
 		Type: EventSessionStarted,
 		Payload: QuestionPayload{
+			QuestionID:    question.ID,
 			QuestionIndex: 0,
 			Text:          question.Text,
 			ImageURL:      question.ImageURL,
@@ -50,11 +51,12 @@ func (h *WSHandler) handleNextQuestion(client *Client, payload json.RawMessage) 
 	data, _ := json.Marshal(Event{
 		Type: EventNextQuestion,
 		Payload: QuestionPayload{
-			Text:      question.Text,
-			ImageURL:  question.ImageURL,
-			Type:      string(question.Type),
-			TimeLimit: question.TimeLimit,
-			Answers:   answers,
+			QuestionID: question.ID,
+			Text:       question.Text,
+			ImageURL:   question.ImageURL,
+			Type:       string(question.Type),
+			TimeLimit:  question.TimeLimit,
+			Answers:    answers,
 		},
 	})
 

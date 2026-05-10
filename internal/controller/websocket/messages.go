@@ -17,6 +17,7 @@ type Event struct {
 
 // payload для нового вопроса
 type QuestionPayload struct {
+	QuestionID    string          `json:"question_id"`
 	QuestionIndex int             `json:"question_index"`
 	Text          string          `json:"text"`
 	ImageURL      string          `json:"image_url,omitempty"`

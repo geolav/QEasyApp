@@ -77,8 +77,13 @@ func (r *repository) AddParticipant(participant entity.SessionParticipant) error
 
 func (r *repository) GetParticipants(sessionID string) ([]entity.SessionParticipant, error) {
 	rows, err := r.db.Query(context.Background(),
-		`SELECT id, session_id, user_id, is_organizer, total_score, joined_at
-			FROM session_participants WHERE session_id = $1`, sessionID)
+		`SELECT sp.id, sp.session_id, sp.user_id, sp.is_organizer, 
+                sp.total_score, sp.joined_at, u.username
+         FROM session_participants sp
+         JOIN users u ON u.id = sp.user_id
+         WHERE sp.session_id = $1`,
+		sessionID,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +91,8 @@ func (r *repository) GetParticipants(sessionID string) ([]entity.SessionParticip
 	var participants []entity.SessionParticipant
 	for rows.Next() {
 		var p entity.SessionParticipant
-		if err := rows.Scan(&p.ID, &p.SessionID, &p.UserID, &p.IsOrganizer, &p.TotalScore, &p.JoinedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.SessionID, &p.UserID,
+			&p.IsOrganizer, &p.TotalScore, &p.JoinedAt, &p.Username); err != nil {
 			return nil, err
 		}
 		participants = append(participants, p)

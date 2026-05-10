@@ -88,17 +88,32 @@ func main() {
 		protected.GET("/ws/:session_id", wsHandler.Connect)
 	}
 
+	//// ========== ФРОНТЕНД ==========
+	//r.Static("/static", filepath.Join(frontendPath))
+	//r.StaticFile("/", filepath.Join(frontendPath, "index.html"))
+	//
+	//// Опционально: для favicon
+	//if _, err := os.Stat(filepath.Join(frontendPath, "favicon.ico")); err == nil {
+	//	r.StaticFile("/favicon.ico", filepath.Join(frontendPath, "favicon.ico"))
+	//}
+	//
+	//r.NoRoute(func(c *gin.Context) {
+	//	c.File(filepath.Join(frontendPath, "index.html"))
+	//})
+	//// ===============================
+
 	// ========== ФРОНТЕНД ==========
-	r.Static("/static", filepath.Join(frontendPath))
-	r.StaticFile("/", filepath.Join(frontendPath, "index.html"))
+	// Раздача статических файлов из папки frontend
+	r.Static("/static", "./frontend")
+	r.StaticFile("/", "./frontend/index.html")
 
 	// Опционально: для favicon
-	if _, err := os.Stat(filepath.Join(frontendPath, "favicon.ico")); err == nil {
-		r.StaticFile("/favicon.ico", filepath.Join(frontendPath, "favicon.ico"))
+	if _, err := os.Stat("./frontend/favicon.ico"); err == nil {
+		r.StaticFile("/favicon.ico", "./frontend/favicon.ico")
 	}
 
 	r.NoRoute(func(c *gin.Context) {
-		c.File(filepath.Join(frontendPath, "index.html"))
+		c.File("./frontend/index.html")
 	})
 	// ===============================
 
