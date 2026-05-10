@@ -806,8 +806,8 @@
                 <div class="auth-subtitle">Войди в свой аккаунт</div>
                 <div class="auth-form">
                     <div class="input-group">
-                        <label class="input-label">Имя пользователя</label>
-                        <input type="text" id="login-username" placeholder="username">
+                        <label class="input-label">Email</label>
+                        <input type="email" id="login-email" placeholder="you@example.com">
                     </div>
                     <div class="input-group">
                         <label class="input-label">Пароль</label>
@@ -1234,13 +1234,13 @@
     }
 
     async function doLogin() {
-        const username = document.getElementById('login-username').value.trim();
+        const email = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
-        if (!username || !password) { toast('Заполни все поля', 'error'); return; }
+        if (!email || !password) { toast('Заполни все поля', 'error'); return; }
         const btn = document.getElementById('btn-login');
         btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
         try {
-            const data = await api('POST', '/login', { username, password });
+            const data = await api('POST', '/login', { email, password });
             state.token = data.token;
             localStorage.setItem('token', data.token);
             const profile = await api('GET', '/profile');
