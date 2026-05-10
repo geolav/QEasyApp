@@ -447,18 +447,19 @@
             background: linear-gradient(135deg, rgba(124,92,252,0.2), rgba(167,139,250,0.1));
             border: 1px solid rgba(124,92,252,0.3);
             border-radius: var(--radius);
-            padding: 24px;
+            padding: 28px 16px;
             text-align: center;
         }
         .room-code-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text2); margin-bottom: 8px; }
         .room-code-value {
             font-family: var(--font-display);
-            font-size: 42px;
+            font-size: clamp(28px, 5vw, 42px);
             font-weight: 800;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.12em;
             background: linear-gradient(135deg, var(--accent2), var(--accent3));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            word-break: break-all;
         }
         .participants-list { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
         .participant-item {
@@ -1156,6 +1157,7 @@
         isOrganizer: false,
         quizData: null,
         returnTo: null,            // куда вернуть после логина ('join')
+        participantPollInterval: null,
     };
 
     // ══════════════════════════════════
@@ -1165,6 +1167,16 @@
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         const el = document.getElementById('page-' + page);
         if (el) el.classList.add('active');
+
+        // сохраняем страницу для восстановления при обновлении
+        if (!['session','quiz-play','home'].includes(page)) {
+            sessionStorage.setItem('currentPage', page);
+        }
+
+        // сохраняем страницу — session/quiz-play не сохраняем, туда нельзя вернуться без WS
+        if (!['session','quiz-play','home'].includes(page)) {
+            sessionStorage.setItem('currentPage', page);
+        }
 
         if (page === 'auth') showAuthForm(sub || 'login');
         if (page === 'dashboard') {
@@ -1487,6 +1499,7 @@
         document.getElementById('participants-list').innerHTML = '<div class="text-muted text-sm text-center" style="padding:20px;">Ожидание подключения...</div>';
         showPage('session');
         connectWebSocket(true);
+        startParticipantPolling();
     }
 
     function connectWebSocket(isOrganizer) {
@@ -1549,6 +1562,9 @@
             const total = questions.length;
             const idx = q.question_index !== undefined ? q.question_index : 0;
             document.getElementById('org-q-progress').textContent = `Вопрос ${idx+1} из ${total}`;
+            // скрываем кнопку если это последний вопрос
+            const btnNext = document.getElementById('btn-next-q');
+            if (btnNext) btnNext.style.display = (idx + 1 >= total) ? 'none' : 'inline-flex';
             document.getElementById('org-q-text').textContent = q.text;
 
             if (q.image_url) {
@@ -1695,6 +1711,7 @@
     // ══════════════════════════════════
     function showLeaderboard(participants) {
         clearInterval(state.timerInterval);
+        stopParticipantPolling();
         if (state.ws) { state.ws.close(); state.ws = null; }
 
         const list = document.getElementById('leaderboard-list');
@@ -1720,7 +1737,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         state.pendingQuestions = [];
         if (state.token && state.user) {
-            showPage('dashboard');
+            const savedPage = sessionStorage.getItem('currentPage') || 'dashboard';
+            showPage(savedPage);
         }
     });
 </script>
