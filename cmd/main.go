@@ -44,8 +44,6 @@ func main() {
 	quizHandler := httpQuiz.New(quizUC)
 	sessionHandler := httpSession.New(sessionUC)
 
-	// ========== ДОБАВЬТЕ ЭТУ ПРОВЕРКУ ==========
-	// Определяем путь к корню проекта
 	_, currentFile, _, _ := runtime.Caller(0)
 	// currentFile = /home/yegor/GolandProjects/QEasyApp/cmd/main.go
 	projectRoot := filepath.Dir(filepath.Dir(currentFile))
@@ -53,7 +51,6 @@ func main() {
 
 	frontendPath := filepath.Join(projectRoot, "frontend")
 	log.Printf("Looking for frontend at: %s", frontendPath)
-	// ============================================
 
 	hub := wsHub.NewHub()
 	go hub.Run()
@@ -88,7 +85,6 @@ func main() {
 		protected.GET("/ws/:session_id", wsHandler.Connect)
 	}
 
-	//// ========== ФРОНТЕНД ==========
 	//r.Static("/static", filepath.Join(frontendPath))
 	//r.StaticFile("/", filepath.Join(frontendPath, "index.html"))
 	//
@@ -100,10 +96,7 @@ func main() {
 	//r.NoRoute(func(c *gin.Context) {
 	//	c.File(filepath.Join(frontendPath, "index.html"))
 	//})
-	//// ===============================
 
-	// ========== ФРОНТЕНД ==========
-	// Раздача статических файлов из папки frontend
 	r.Static("/static", "./frontend")
 	r.StaticFile("/", "./frontend/index.html")
 
@@ -115,7 +108,6 @@ func main() {
 	r.NoRoute(func(c *gin.Context) {
 		c.File("./frontend/index.html")
 	})
-	// ===============================
 
 	log.Printf("server started on port %s", cfg.ServerPort)
 	if err := r.Run(":" + cfg.ServerPort); err != nil {
