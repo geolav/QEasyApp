@@ -140,22 +140,16 @@ func (uc *useCase) NextQuestion(sessionID, organizerID string) (entity.Question,
 	return quiz.Questions[nextIndex], nil
 }
 
-func (uc *useCase) SubmitAnswer(sessionID, participantID, questionID, answerID string, responseTimeMs int) (int, error) {
-
+func (uc *useCase) SubmitAnswer(sessionID, participantID, questionID string, answerIDs []string, responseTimeMs int) (int, error) {
 	session, err := uc.sessionRepo.GetByID(sessionID)
 	if err != nil {
 		return 0, err
 	}
 	quiz, err := uc.quizRepo.GetByID(session.QuizID)
-
 	if err != nil {
 		return 0, err
 	}
 	question, err := findQuestion(quiz.Questions, questionID)
-	if err != nil {
-		return 0, err
-	}
-	answer, err := findAnswer(question.Answers, answerID)
 	if err != nil {
 		return 0, err
 	}
@@ -164,9 +158,61 @@ func (uc *useCase) SubmitAnswer(sessionID, participantID, questionID, answerID s
 	if responseTimeMs > timeLimitMs {
 		return 0, errors.New("time is up")
 	}
+
 	score := 0
-	if answer.IsCorrect {
-		score = calculateScore(responseTimeMs, question.TimeLimit)
+	if question.Type == entity.QuestionTypeSingle {
+		// одиночный выбор — как раньше
+		if len(answerIDs) > 0 {
+			answer, err := findAnswer(question.Answers, answerIDs[0])
+			if err == nil && answer.IsCorrect {
+				score = calculateScore(responseTimeMs, question.TimeLimit)
+			}
+		}
+	} else {
+		// множественный выбор
+		// правило: все правильные выбраны И ни одного неправильного
+		correctIDs := map[string]bool{}
+		for _, a := range question.Answers {
+			if a.IsCorrect {
+				correctIDs[a.ID] = true
+			}
+		}
+
+		selectedIDs := map[string]bool{}
+		for _, id := range answerIDs {
+			selectedIDs[id] = true
+		}
+
+		// проверяем что выбраны все правильные
+		allCorrectSelected := true
+		for id := range correctIDs {
+			if !selectedIDs[id] {
+				allCorrectSelected = false
+				break
+			}
+		}
+
+		// проверяем что нет лишних неправильных
+		noWrongSelected := true
+		for id := range selectedIDs {
+			if !correctIDs[id] {
+				noWrongSelected = false
+				break
+			}
+		}
+
+		if allCorrectSelected && noWrongSelected {
+			score = calculateScore(responseTimeMs, question.TimeLimit)
+		} else if allCorrectSelected {
+			// выбраны все правильные но есть лишние — половина баллов
+			score = calculateScore(responseTimeMs, question.TimeLimit) / 2
+		}
+	}
+
+	// сохраняем первый answer_id для совместимости с БД
+	mainAnswerID := ""
+	if len(answerIDs) > 0 {
+		mainAnswerID = answerIDs[0]
 	}
 
 	userAnswer := entity.UserAnswer{
@@ -174,7 +220,8 @@ func (uc *useCase) SubmitAnswer(sessionID, participantID, questionID, answerID s
 		SessionID:      sessionID,
 		ParticipantID:  participantID,
 		QuestionID:     questionID,
-		AnswerID:       answerID,
+		AnswerID:       mainAnswerID,
+		AnswerIDs:      answerIDs,
 		ResponseTimeMs: responseTimeMs,
 		Score:          score,
 		AnsweredAt:     time.Now(),
@@ -183,7 +230,6 @@ func (uc *useCase) SubmitAnswer(sessionID, participantID, questionID, answerID s
 	if err := uc.sessionRepo.SaveUserAnswer(userAnswer); err != nil {
 		return 0, err
 	}
-	// обновляем total_score участника
 	if err := uc.sessionRepo.UpdateParticipantScore(participantID, score); err != nil {
 		return 0, err
 	}

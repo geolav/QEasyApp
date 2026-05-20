@@ -69,10 +69,11 @@ func (h *WSHandler) handleNextQuestion(client *Client, payload json.RawMessage) 
 
 func (h *WSHandler) handleSubmitAnswer(client *Client, payload json.RawMessage) {
 	var req struct {
-		QuestionID     string `json:"question_id"`
-		AnswerID       string `json:"answer_id"`
-		ResponseTimeMs int    `json:"response_time_ms"`
-		ParticipantID  string `json:"participant_id"`
+		QuestionID     string   `json:"question_id"`
+		AnswerIDs      []string `json:"answer_ids"` // массив
+		AnswerID       string   `json:"answer_id"`  // fallback для старых клиентов
+		ResponseTimeMs int      `json:"response_time_ms"`
+		ParticipantID  string   `json:"participant_id"`
 	}
 
 	if err := json.Unmarshal(payload, &req); err != nil {
@@ -80,11 +81,17 @@ func (h *WSHandler) handleSubmitAnswer(client *Client, payload json.RawMessage) 
 		return
 	}
 
+	// если answer_ids не пришёл — берём одиночный answer_id
+	answerIDs := req.AnswerIDs
+	if len(answerIDs) == 0 && req.AnswerID != "" {
+		answerIDs = []string{req.AnswerID}
+	}
+
 	score, err := h.sessionUC.SubmitAnswer(
 		client.SessionID,
 		req.ParticipantID,
 		req.QuestionID,
-		req.AnswerID,
+		answerIDs,
 		req.ResponseTimeMs,
 	)
 	if err != nil {
@@ -92,7 +99,6 @@ func (h *WSHandler) handleSubmitAnswer(client *Client, payload json.RawMessage) 
 		return
 	}
 
-	// отправляем результат только этому участнику
 	data, _ := json.Marshal(Event{
 		Type:    EventAnswerSubmitted,
 		Payload: map[string]int{"score": score},

@@ -23,7 +23,7 @@ type SessionUseCase interface {
 	StartSession(sessionID, organizerID string) (entity.Question, error)
 	NextQuestion(sessionID, organizerID string) (entity.Question, error)
 	//SubmitAnswer возвращает Score
-	SubmitAnswer(sessionID, participantID, questionsID, answerID string, responseTimeMs int) (int, error)
+	SubmitAnswer(sessionID, participantID, questionID string, answerIDs []string, responseTimeMs int) (int, error)
 	FinishSession(sessionID, participantID string) error
 	GetLeaderboard(sessionID string) ([]entity.SessionParticipant, error)
 }

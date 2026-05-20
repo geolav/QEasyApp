@@ -1612,7 +1612,7 @@
     <div class="question-item">
       <div class="question-number">Вопрос ${i+1}</div>
       <div style="font-weight:500;margin-bottom:12px;">${q.text}</div>
-      ${q.image_url ? `<div style="font-size:12px;color:var(--text2);margin-bottom:8px;">🖼 ${q.image_url}</div>` : ''}
+      ${q.image_url ? `<div style="font-size:12px;color:var(--text2);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;" title="${q.image_url}">🖼 ${q.image_url.length > 50 ? q.image_url.slice(0,50) + '...' : q.image_url}</div>` : ''}
       <div class="answers-grid">
         ${q.answers.map((a, ai) => `
           <div class="answer-input-row ${a.is_correct ? 'correct' : ''}" style="cursor:default;">
