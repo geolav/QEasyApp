@@ -1,3 +1,2619 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="ru">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>QEasy — Квизы в реальном времени</title>-->
+<!--    <link rel="preconnect" href="https://fonts.googleapis.com">-->
+<!--    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"-->
+<!--          rel="stylesheet">-->
+<!--    <style>-->
+<!--        *, *::before, *::after {-->
+<!--            box-sizing: border-box;-->
+<!--            margin: 0;-->
+<!--            padding: 0;-->
+<!--        }-->
+
+<!--        :root {-->
+<!--            &#45;&#45;bg: #0a0a0f;-->
+<!--            &#45;&#45;bg2: #12121a;-->
+<!--            &#45;&#45;bg3: #1a1a26;-->
+<!--            &#45;&#45;border: rgba(255, 255, 255, 0.08);-->
+<!--            &#45;&#45;border2: rgba(255, 255, 255, 0.15);-->
+<!--            &#45;&#45;text: #f0f0f8;-->
+<!--            &#45;&#45;text2: #8888aa;-->
+<!--            &#45;&#45;text3: #5555777;-->
+<!--            &#45;&#45;accent: #7c5cfc;-->
+<!--            &#45;&#45;accent2: #a78bfa;-->
+<!--            &#45;&#45;accent3: #c4b5fd;-->
+<!--            &#45;&#45;green: #34d399;-->
+<!--            &#45;&#45;red: #f87171;-->
+<!--            &#45;&#45;yellow: #fbbf24;-->
+<!--            &#45;&#45;font-display: 'Syne', sans-serif;-->
+<!--            &#45;&#45;font-body: 'DM Sans', sans-serif;-->
+<!--            &#45;&#45;radius: 16px;-->
+<!--            &#45;&#45;radius-sm: 8px;-->
+<!--            &#45;&#45;shadow: 0 0 40px rgba(124, 92, 252, 0.15);-->
+<!--        }-->
+
+<!--        body {-->
+<!--            background: var(&#45;&#45;bg);-->
+<!--            color: var(&#45;&#45;text);-->
+<!--            font-family: var(&#45;&#45;font-body);-->
+<!--            font-size: 16px;-->
+<!--            line-height: 1.6;-->
+<!--            min-height: 100vh;-->
+<!--            overflow-x: hidden;-->
+<!--        }-->
+
+<!--        /* ── NOISE TEXTURE ── */-->
+<!--        body::before {-->
+<!--            content: '';-->
+<!--            position: fixed;-->
+<!--            inset: 0;-->
+<!--            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");-->
+<!--            pointer-events: none;-->
+<!--            z-index: 1000;-->
+<!--            opacity: 0.4;-->
+<!--        }-->
+
+<!--        /* ── PAGES ── */-->
+<!--        .page {-->
+<!--            display: none;-->
+<!--            min-height: 100vh;-->
+<!--        }-->
+
+<!--        .page.active {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--        }-->
+
+<!--        /* ── NAV ── */-->
+<!--        nav {-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            justify-content: space-between;-->
+<!--            padding: 20px 40px;-->
+<!--            border-bottom: 1px solid var(&#45;&#45;border);-->
+<!--            position: sticky;-->
+<!--            top: 0;-->
+<!--            background: rgba(10, 10, 15, 0.85);-->
+<!--            backdrop-filter: blur(20px);-->
+<!--            z-index: 100;-->
+<!--        }-->
+
+<!--        .logo {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 24px;-->
+<!--            font-weight: 800;-->
+<!--            background: linear-gradient(135deg, var(&#45;&#45;accent2), var(&#45;&#45;accent3));-->
+<!--            -webkit-background-clip: text;-->
+<!--            -webkit-text-fill-color: transparent;-->
+<!--            cursor: pointer;-->
+<!--        }-->
+
+<!--        .nav-actions {-->
+<!--            display: flex;-->
+<!--            gap: 12px;-->
+<!--            align-items: center;-->
+<!--        }-->
+
+<!--        /* ── BUTTONS ── */-->
+<!--        .btn {-->
+<!--            display: inline-flex;-->
+<!--            align-items: center;-->
+<!--            gap: 8px;-->
+<!--            padding: 12px 24px;-->
+<!--            border-radius: var(&#45;&#45;radius-sm);-->
+<!--            border: none;-->
+<!--            cursor: pointer;-->
+<!--            font-family: var(&#45;&#45;font-body);-->
+<!--            font-size: 15px;-->
+<!--            font-weight: 500;-->
+<!--            transition: all 0.2s;-->
+<!--            text-decoration: none;-->
+<!--        }-->
+
+<!--        .btn-primary {-->
+<!--            background: var(&#45;&#45;accent);-->
+<!--            color: white;-->
+<!--        }-->
+
+<!--        .btn-primary:hover {-->
+<!--            background: #6d4ee6;-->
+<!--            transform: translateY(-1px);-->
+<!--            box-shadow: 0 8px 24px rgba(124, 92, 252, 0.4);-->
+<!--        }-->
+
+<!--        .btn-secondary {-->
+<!--            background: var(&#45;&#45;bg3);-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            border: 1px solid var(&#45;&#45;border);-->
+<!--        }-->
+
+<!--        .btn-secondary:hover {-->
+<!--            border-color: var(&#45;&#45;border2);-->
+<!--            color: var(&#45;&#45;text);-->
+<!--        }-->
+
+<!--        .btn-ghost {-->
+<!--            background: transparent;-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--        }-->
+
+<!--        .btn-ghost:hover {-->
+<!--            color: var(&#45;&#45;text);-->
+<!--            background: var(&#45;&#45;bg3);-->
+<!--        }-->
+
+<!--        .btn-danger {-->
+<!--            background: rgba(248, 113, 113, 0.15);-->
+<!--            color: var(&#45;&#45;red);-->
+<!--            border: 1px solid rgba(248, 113, 113, 0.3);-->
+<!--        }-->
+
+<!--        .btn-danger:hover {-->
+<!--            background: rgba(248, 113, 113, 0.25);-->
+<!--        }-->
+
+<!--        .btn-lg {-->
+<!--            padding: 16px 32px;-->
+<!--            font-size: 17px;-->
+<!--            border-radius: var(&#45;&#45;radius);-->
+<!--        }-->
+
+<!--        .btn-sm {-->
+<!--            padding: 8px 16px;-->
+<!--            font-size: 13px;-->
+<!--        }-->
+
+<!--        .btn:disabled {-->
+<!--            opacity: 0.4;-->
+<!--            cursor: not-allowed;-->
+<!--            transform: none !important;-->
+<!--        }-->
+
+<!--        /* ── INPUTS ── */-->
+<!--        .input-group {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            gap: 6px;-->
+<!--        }-->
+
+<!--        .input-label {-->
+<!--            font-size: 13px;-->
+<!--            font-weight: 500;-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            text-transform: uppercase;-->
+<!--            letter-spacing: 0.05em;-->
+<!--        }-->
+
+<!--        input, textarea, select {-->
+<!--            background: var(&#45;&#45;bg3);-->
+<!--            border: 1px solid var(&#45;&#45;border);-->
+<!--            border-radius: var(&#45;&#45;radius-sm);-->
+<!--            color: var(&#45;&#45;text);-->
+<!--            font-family: var(&#45;&#45;font-body);-->
+<!--            font-size: 15px;-->
+<!--            padding: 12px 16px;-->
+<!--            width: 100%;-->
+<!--            transition: border-color 0.2s;-->
+<!--            outline: none;-->
+<!--        }-->
+
+<!--        input:focus, textarea:focus, select:focus {-->
+<!--            border-color: var(&#45;&#45;accent);-->
+<!--            box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.15);-->
+<!--        }-->
+
+<!--        input::placeholder, textarea::placeholder {-->
+<!--            color: var(&#45;&#45;text3);-->
+<!--        }-->
+
+<!--        select option {-->
+<!--            background: var(&#45;&#45;bg2);-->
+<!--        }-->
+
+<!--        /* ── CARDS ── */-->
+<!--        .card {-->
+<!--            background: var(&#45;&#45;bg2);-->
+<!--            border: 1px solid var(&#45;&#45;border);-->
+<!--            border-radius: var(&#45;&#45;radius);-->
+<!--            padding: 24px;-->
+<!--        }-->
+
+<!--        .card:hover {-->
+<!--            border-color: var(&#45;&#45;border2);-->
+<!--        }-->
+
+<!--        /* ── TOAST ── */-->
+<!--        #toast-container {-->
+<!--            position: fixed;-->
+<!--            bottom: 32px;-->
+<!--            right: 32px;-->
+<!--            z-index: 9999;-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            gap: 8px;-->
+<!--        }-->
+
+<!--        .toast {-->
+<!--            padding: 14px 20px;-->
+<!--            border-radius: var(&#45;&#45;radius-sm);-->
+<!--            font-size: 14px;-->
+<!--            font-weight: 500;-->
+<!--            animation: slideIn 0.3s ease;-->
+<!--            max-width: 320px;-->
+<!--        }-->
+
+<!--        .toast-success {-->
+<!--            background: rgba(52, 211, 153, 0.15);-->
+<!--            border: 1px solid rgba(52, 211, 153, 0.3);-->
+<!--            color: var(&#45;&#45;green);-->
+<!--        }-->
+
+<!--        .toast-error {-->
+<!--            background: rgba(248, 113, 113, 0.15);-->
+<!--            border: 1px solid rgba(248, 113, 113, 0.3);-->
+<!--            color: var(&#45;&#45;red);-->
+<!--        }-->
+
+<!--        .toast-info {-->
+<!--            background: rgba(124, 92, 252, 0.15);-->
+<!--            border: 1px solid rgba(124, 92, 252, 0.3);-->
+<!--            color: var(&#45;&#45;accent3);-->
+<!--        }-->
+
+<!--        @keyframes slideIn {-->
+<!--            from {-->
+<!--                opacity: 0;-->
+<!--                transform: translateX(20px);-->
+<!--            }-->
+<!--            to {-->
+<!--                opacity: 1;-->
+<!--                transform: translateX(0);-->
+<!--            }-->
+<!--        }-->
+
+<!--        /* ── MODAL ── */-->
+<!--        .modal-overlay {-->
+<!--            display: none;-->
+<!--            position: fixed;-->
+<!--            inset: 0;-->
+<!--            background: rgba(0, 0, 0, 0.7);-->
+<!--            backdrop-filter: blur(8px);-->
+<!--            z-index: 500;-->
+<!--            align-items: center;-->
+<!--            justify-content: center;-->
+<!--        }-->
+
+<!--        .modal-overlay.active {-->
+<!--            display: flex;-->
+<!--        }-->
+
+<!--        .modal {-->
+<!--            background: var(&#45;&#45;bg2);-->
+<!--            border: 1px solid var(&#45;&#45;border2);-->
+<!--            border-radius: var(&#45;&#45;radius);-->
+<!--            padding: 32px;-->
+<!--            width: 90%;-->
+<!--            max-width: 500px;-->
+<!--            animation: modalIn 0.25s ease;-->
+<!--        }-->
+
+<!--        @keyframes modalIn {-->
+<!--            from {-->
+<!--                opacity: 0;-->
+<!--                transform: scale(0.95);-->
+<!--            }-->
+<!--            to {-->
+<!--                opacity: 1;-->
+<!--                transform: scale(1);-->
+<!--            }-->
+<!--        }-->
+
+<!--        .modal-title {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 22px;-->
+<!--            font-weight: 700;-->
+<!--            margin-bottom: 24px;-->
+<!--        }-->
+
+<!--        /* ── BADGE ── */-->
+<!--        .badge {-->
+<!--            display: inline-flex;-->
+<!--            align-items: center;-->
+<!--            padding: 4px 10px;-->
+<!--            border-radius: 100px;-->
+<!--            font-size: 12px;-->
+<!--            font-weight: 500;-->
+<!--        }-->
+
+<!--        .badge-draft {-->
+<!--            background: rgba(136, 136, 170, 0.15);-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--        }-->
+
+<!--        .badge-published {-->
+<!--            background: rgba(52, 211, 153, 0.15);-->
+<!--            color: var(&#45;&#45;green);-->
+<!--        }-->
+
+<!--        .badge-active {-->
+<!--            background: rgba(124, 92, 252, 0.2);-->
+<!--            color: var(&#45;&#45;accent3);-->
+<!--        }-->
+
+<!--        .badge-finished {-->
+<!--            background: rgba(136, 136, 170, 0.1);-->
+<!--            color: var(&#45;&#45;text3);-->
+<!--        }-->
+
+<!--        /* ── LOADER ── */-->
+<!--        .spinner {-->
+<!--            width: 20px;-->
+<!--            height: 20px;-->
+<!--            border: 2px solid rgba(255, 255, 255, 0.1);-->
+<!--            border-top-color: var(&#45;&#45;accent);-->
+<!--            border-radius: 50%;-->
+<!--            animation: spin 0.7s linear infinite;-->
+<!--            display: inline-block;-->
+<!--        }-->
+
+<!--        @keyframes spin {-->
+<!--            to {-->
+<!--                transform: rotate(360deg);-->
+<!--            }-->
+<!--        }-->
+
+<!--        /* ── DIVIDER ── */-->
+<!--        .divider {-->
+<!--            height: 1px;-->
+<!--            background: var(&#45;&#45;border);-->
+<!--            margin: 24px 0;-->
+<!--        }-->
+
+<!--        /* ══════════════════════════════════-->
+<!--           PAGE: HOME-->
+<!--        ══════════════════════════════════ */-->
+<!--        #page-home {-->
+<!--            align-items: center;-->
+<!--            justify-content: center;-->
+<!--            position: relative;-->
+<!--            overflow: hidden;-->
+<!--        }-->
+
+<!--        .hero-glow {-->
+<!--            position: absolute;-->
+<!--            width: 600px;-->
+<!--            height: 600px;-->
+<!--            background: radial-gradient(circle, rgba(124, 92, 252, 0.2) 0%, transparent 70%);-->
+<!--            top: 50%;-->
+<!--            left: 50%;-->
+<!--            transform: translate(-50%, -60%);-->
+<!--            pointer-events: none;-->
+<!--        }-->
+
+<!--        .hero {-->
+<!--            text-align: center;-->
+<!--            padding: 80px 40px;-->
+<!--            position: relative;-->
+<!--            z-index: 1;-->
+<!--            max-width: 700px;-->
+<!--        }-->
+
+<!--        .hero-tag {-->
+<!--            display: inline-flex;-->
+<!--            align-items: center;-->
+<!--            gap: 8px;-->
+<!--            padding: 8px 16px;-->
+<!--            border-radius: 100px;-->
+<!--            border: 1px solid rgba(124, 92, 252, 0.3);-->
+<!--            background: rgba(124, 92, 252, 0.1);-->
+<!--            color: var(&#45;&#45;accent3);-->
+<!--            font-size: 13px;-->
+<!--            font-weight: 500;-->
+<!--            margin-bottom: 32px;-->
+<!--        }-->
+
+<!--        .hero-dot {-->
+<!--            width: 6px;-->
+<!--            height: 6px;-->
+<!--            background: var(&#45;&#45;accent);-->
+<!--            border-radius: 50%;-->
+<!--            animation: pulse 2s infinite;-->
+<!--        }-->
+
+<!--        @keyframes pulse {-->
+<!--            0%, 100% {-->
+<!--                opacity: 1;-->
+<!--            }-->
+<!--            50% {-->
+<!--                opacity: 0.4;-->
+<!--            }-->
+<!--        }-->
+
+<!--        .hero h1 {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: clamp(48px, 8vw, 80px);-->
+<!--            font-weight: 800;-->
+<!--            line-height: 1.05;-->
+<!--            margin-bottom: 24px;-->
+<!--            letter-spacing: -0.02em;-->
+<!--        }-->
+
+<!--        .hero h1 span {-->
+<!--            background: linear-gradient(135deg, var(&#45;&#45;accent2), var(&#45;&#45;accent3));-->
+<!--            -webkit-background-clip: text;-->
+<!--            -webkit-text-fill-color: transparent;-->
+<!--        }-->
+
+<!--        .hero p {-->
+<!--            font-size: 18px;-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            margin-bottom: 48px;-->
+<!--            max-width: 480px;-->
+<!--            margin-left: auto;-->
+<!--            margin-right: auto;-->
+<!--        }-->
+
+<!--        .hero-actions {-->
+<!--            display: flex;-->
+<!--            gap: 16px;-->
+<!--            justify-content: center;-->
+<!--            flex-wrap: wrap;-->
+<!--        }-->
+
+<!--        /* ══════════════════════════════════-->
+<!--           PAGE: AUTH-->
+<!--        ══════════════════════════════════ */-->
+<!--        #page-auth {-->
+<!--            align-items: center;-->
+<!--            justify-content: center;-->
+<!--            min-height: 100vh;-->
+<!--        }-->
+
+<!--        .auth-box {-->
+<!--            width: 100%;-->
+<!--            max-width: 440px;-->
+<!--            padding: 40px;-->
+<!--        }-->
+
+<!--        .auth-title {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 32px;-->
+<!--            font-weight: 700;-->
+<!--            margin-bottom: 8px;-->
+<!--        }-->
+
+<!--        .auth-subtitle {-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            margin-bottom: 32px;-->
+<!--        }-->
+
+<!--        .auth-form {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            gap: 20px;-->
+<!--        }-->
+
+<!--        .auth-switch {-->
+<!--            text-align: center;-->
+<!--            margin-top: 24px;-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            font-size: 14px;-->
+<!--        }-->
+
+<!--        .auth-switch a {-->
+<!--            color: var(&#45;&#45;accent3);-->
+<!--            cursor: pointer;-->
+<!--            text-decoration: none;-->
+<!--        }-->
+
+<!--        .auth-switch a:hover {-->
+<!--            text-decoration: underline;-->
+<!--        }-->
+
+<!--        /* ══════════════════════════════════-->
+<!--           PAGE: DASHBOARD-->
+<!--        ══════════════════════════════════ */-->
+<!--        #page-dashboard {-->
+<!--            padding: 0;-->
+<!--        }-->
+
+<!--        .dashboard-layout {-->
+<!--            display: grid;-->
+<!--            grid-template-columns: 260px 1fr;-->
+<!--            min-height: calc(100vh - 65px);-->
+<!--        }-->
+
+<!--        .sidebar {-->
+<!--            border-right: 1px solid var(&#45;&#45;border);-->
+<!--            padding: 32px 20px;-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            gap: 4px;-->
+<!--        }-->
+
+<!--        .sidebar-label {-->
+<!--            font-size: 11px;-->
+<!--            text-transform: uppercase;-->
+<!--            letter-spacing: 0.08em;-->
+<!--            color: var(&#45;&#45;text3);-->
+<!--            padding: 0 12px;-->
+<!--            margin: 16px 0 8px;-->
+<!--            font-weight: 600;-->
+<!--        }-->
+
+<!--        .sidebar-item {-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            gap: 12px;-->
+<!--            padding: 10px 12px;-->
+<!--            border-radius: var(&#45;&#45;radius-sm);-->
+<!--            cursor: pointer;-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            font-size: 14px;-->
+<!--            font-weight: 500;-->
+<!--            transition: all 0.15s;-->
+<!--            border: 1px solid transparent;-->
+<!--        }-->
+
+<!--        .sidebar-item:hover {-->
+<!--            background: var(&#45;&#45;bg3);-->
+<!--            color: var(&#45;&#45;text);-->
+<!--        }-->
+
+<!--        .sidebar-item.active {-->
+<!--            background: rgba(124, 92, 252, 0.15);-->
+<!--            color: var(&#45;&#45;accent3);-->
+<!--            border-color: rgba(124, 92, 252, 0.2);-->
+<!--        }-->
+
+<!--        .sidebar-icon {-->
+<!--            font-size: 18px;-->
+<!--            width: 20px;-->
+<!--            text-align: center;-->
+<!--        }-->
+
+<!--        .main-content {-->
+<!--            padding: 40px;-->
+<!--            overflow-y: auto;-->
+<!--        }-->
+
+<!--        .content-header {-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            justify-content: space-between;-->
+<!--            margin-bottom: 32px;-->
+<!--        }-->
+
+<!--        .content-title {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 28px;-->
+<!--            font-weight: 700;-->
+<!--        }-->
+
+<!--        .content-subtitle {-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            font-size: 14px;-->
+<!--            margin-top: 4px;-->
+<!--        }-->
+
+<!--        /* Tab content */-->
+<!--        .tab-content {-->
+<!--            display: none;-->
+<!--        }-->
+
+<!--        .tab-content.active {-->
+<!--            display: block;-->
+<!--        }-->
+
+<!--        /* Quiz grid */-->
+<!--        .quiz-grid {-->
+<!--            display: grid;-->
+<!--            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));-->
+<!--            gap: 20px;-->
+<!--        }-->
+
+<!--        .quiz-card {-->
+<!--            background: var(&#45;&#45;bg2);-->
+<!--            border: 1px solid var(&#45;&#45;border);-->
+<!--            border-radius: var(&#45;&#45;radius);-->
+<!--            padding: 24px;-->
+<!--            cursor: pointer;-->
+<!--            transition: all 0.2s;-->
+<!--            position: relative;-->
+<!--            overflow: hidden;-->
+<!--        }-->
+
+<!--        .quiz-card::before {-->
+<!--            content: '';-->
+<!--            position: absolute;-->
+<!--            top: 0;-->
+<!--            left: 0;-->
+<!--            right: 0;-->
+<!--            height: 3px;-->
+<!--            background: linear-gradient(90deg, var(&#45;&#45;accent), var(&#45;&#45;accent3));-->
+<!--            opacity: 0;-->
+<!--            transition: opacity 0.2s;-->
+<!--        }-->
+
+<!--        .quiz-card:hover {-->
+<!--            border-color: var(&#45;&#45;border2);-->
+<!--            transform: translateY(-2px);-->
+<!--            box-shadow: var(&#45;&#45;shadow);-->
+<!--        }-->
+
+<!--        .quiz-card:hover::before {-->
+<!--            opacity: 1;-->
+<!--        }-->
+
+<!--        .quiz-card-title {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 18px;-->
+<!--            font-weight: 600;-->
+<!--            margin-bottom: 8px;-->
+<!--        }-->
+
+<!--        .quiz-card-meta {-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            gap: 12px;-->
+<!--            margin-top: 16px;-->
+<!--        }-->
+
+<!--        .quiz-card-stat {-->
+<!--            font-size: 13px;-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--        }-->
+
+<!--        .quiz-card-actions {-->
+<!--            display: flex;-->
+<!--            gap: 8px;-->
+<!--            margin-top: 16px;-->
+<!--        }-->
+
+<!--        /* Empty state */-->
+<!--        .empty-state {-->
+<!--            text-align: center;-->
+<!--            padding: 80px 40px;-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--        }-->
+
+<!--        .empty-icon {-->
+<!--            font-size: 48px;-->
+<!--            margin-bottom: 16px;-->
+<!--            opacity: 0.5;-->
+<!--        }-->
+
+<!--        .empty-title {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 20px;-->
+<!--            font-weight: 600;-->
+<!--            color: var(&#45;&#45;text);-->
+<!--            margin-bottom: 8px;-->
+<!--        }-->
+
+<!--        /* ══════════════════════════════════-->
+<!--           PAGE: CREATE QUIZ-->
+<!--        ══════════════════════════════════ */-->
+<!--        .create-layout {-->
+<!--            max-width: 800px;-->
+<!--        }-->
+
+<!--        .section-title {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 18px;-->
+<!--            font-weight: 600;-->
+<!--            margin-bottom: 20px;-->
+<!--        }-->
+
+<!--        .form-row {-->
+<!--            display: grid;-->
+<!--            grid-template-columns: 1fr 1fr;-->
+<!--            gap: 20px;-->
+<!--        }-->
+
+<!--        .questions-list {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            gap: 16px;-->
+<!--        }-->
+
+<!--        .question-item {-->
+<!--            background: var(&#45;&#45;bg3);-->
+<!--            border: 1px solid var(&#45;&#45;border);-->
+<!--            border-radius: var(&#45;&#45;radius);-->
+<!--            padding: 20px;-->
+<!--            position: relative;-->
+<!--        }-->
+
+<!--        .question-number {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 12px;-->
+<!--            font-weight: 700;-->
+<!--            color: var(&#45;&#45;accent2);-->
+<!--            text-transform: uppercase;-->
+<!--            letter-spacing: 0.05em;-->
+<!--            margin-bottom: 12px;-->
+<!--        }-->
+
+<!--        .answers-grid {-->
+<!--            display: grid;-->
+<!--            grid-template-columns: 1fr 1fr;-->
+<!--            gap: 10px;-->
+<!--            margin-top: 12px;-->
+<!--        }-->
+
+<!--        .answer-input-row {-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            gap: 10px;-->
+<!--            background: var(&#45;&#45;bg2);-->
+<!--            border: 1px solid var(&#45;&#45;border);-->
+<!--            border-radius: var(&#45;&#45;radius-sm);-->
+<!--            padding: 8px 12px;-->
+<!--            transition: border-color 0.2s;-->
+<!--        }-->
+
+<!--        .answer-input-row.correct {-->
+<!--            border-color: rgba(52, 211, 153, 0.4);-->
+<!--            background: rgba(52, 211, 153, 0.05);-->
+<!--        }-->
+
+<!--        .answer-input-row input {-->
+<!--            background: transparent;-->
+<!--            border: none;-->
+<!--            padding: 4px 0;-->
+<!--            flex: 1;-->
+<!--        }-->
+
+<!--        .answer-input-row input:focus {-->
+<!--            box-shadow: none;-->
+<!--        }-->
+
+<!--        .correct-toggle {-->
+<!--            width: 20px;-->
+<!--            height: 20px;-->
+<!--            border-radius: 50%;-->
+<!--            border: 2px solid var(&#45;&#45;border2);-->
+<!--            cursor: pointer;-->
+<!--            flex-shrink: 0;-->
+<!--            transition: all 0.2s;-->
+<!--            background: transparent;-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            justify-content: center;-->
+<!--            font-size: 11px;-->
+<!--        }-->
+
+<!--        .correct-toggle.active {-->
+<!--            background: var(&#45;&#45;green);-->
+<!--            border-color: var(&#45;&#45;green);-->
+<!--        }-->
+
+<!--        /* ══════════════════════════════════-->
+<!--           PAGE: SESSION (ORGANIZER)-->
+<!--        ══════════════════════════════════ */-->
+<!--        .session-layout {-->
+<!--            display: grid;-->
+<!--            grid-template-columns: 1fr 320px;-->
+<!--            gap: 24px;-->
+<!--            padding: 40px;-->
+<!--            max-width: 1200px;-->
+<!--            margin: 0 auto;-->
+<!--            width: 100%;-->
+<!--        }-->
+
+<!--        .session-main {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            gap: 24px;-->
+<!--        }-->
+
+<!--        .session-sidebar-panel {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            gap: 16px;-->
+<!--        }-->
+
+<!--        .room-code-display {-->
+<!--            background: linear-gradient(135deg, rgba(124, 92, 252, 0.2), rgba(167, 139, 250, 0.1));-->
+<!--            border: 1px solid rgba(124, 92, 252, 0.3);-->
+<!--            border-radius: var(&#45;&#45;radius);-->
+<!--            padding: 28px 16px;-->
+<!--            text-align: center;-->
+<!--        }-->
+
+<!--        .room-code-label {-->
+<!--            font-size: 12px;-->
+<!--            text-transform: uppercase;-->
+<!--            letter-spacing: 0.1em;-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            margin-bottom: 8px;-->
+<!--        }-->
+
+<!--        .room-code-value {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: clamp(28px, 5vw, 42px);-->
+<!--            font-weight: 800;-->
+<!--            letter-spacing: 0.12em;-->
+<!--            background: linear-gradient(135deg, var(&#45;&#45;accent2), var(&#45;&#45;accent3));-->
+<!--            -webkit-background-clip: text;-->
+<!--            -webkit-text-fill-color: transparent;-->
+<!--            word-break: break-all;-->
+<!--        }-->
+
+<!--        .participants-list {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            gap: 8px;-->
+<!--            max-height: 300px;-->
+<!--            overflow-y: auto;-->
+<!--        }-->
+
+<!--        .participant-item {-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            justify-content: space-between;-->
+<!--            padding: 10px 14px;-->
+<!--            background: var(&#45;&#45;bg3);-->
+<!--            border-radius: var(&#45;&#45;radius-sm);-->
+<!--            font-size: 14px;-->
+<!--        }-->
+
+<!--        .participant-name {-->
+<!--            font-weight: 500;-->
+<!--        }-->
+
+<!--        .participant-score {-->
+<!--            color: var(&#45;&#45;accent3);-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-weight: 600;-->
+<!--        }-->
+
+<!--        .current-question-card {-->
+<!--            background: var(&#45;&#45;bg2);-->
+<!--            border: 1px solid var(&#45;&#45;border);-->
+<!--            border-radius: var(&#45;&#45;radius);-->
+<!--            padding: 32px;-->
+<!--        }-->
+
+<!--        .question-progress {-->
+<!--            font-size: 13px;-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            margin-bottom: 16px;-->
+<!--        }-->
+
+<!--        .question-text {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 24px;-->
+<!--            font-weight: 600;-->
+<!--            margin-bottom: 24px;-->
+<!--            line-height: 1.3;-->
+<!--        }-->
+
+<!--        .answers-preview {-->
+<!--            display: grid;-->
+<!--            grid-template-columns: 1fr 1fr;-->
+<!--            gap: 12px;-->
+<!--        }-->
+
+<!--        .answer-preview {-->
+<!--            padding: 14px 18px;-->
+<!--            background: var(&#45;&#45;bg3);-->
+<!--            border: 1px solid var(&#45;&#45;border);-->
+<!--            border-radius: var(&#45;&#45;radius-sm);-->
+<!--            font-size: 14px;-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            gap: 10px;-->
+<!--        }-->
+
+<!--        .answer-preview.correct-answer {-->
+<!--            border-color: rgba(52, 211, 153, 0.4);-->
+<!--            background: rgba(52, 211, 153, 0.08);-->
+<!--            color: var(&#45;&#45;green);-->
+<!--        }-->
+
+<!--        .answer-letter {-->
+<!--            width: 28px;-->
+<!--            height: 28px;-->
+<!--            border-radius: 6px;-->
+<!--            background: var(&#45;&#45;bg2);-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            justify-content: center;-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 13px;-->
+<!--            font-weight: 700;-->
+<!--            flex-shrink: 0;-->
+<!--        }-->
+
+<!--        .session-controls {-->
+<!--            display: flex;-->
+<!--            gap: 12px;-->
+<!--            flex-wrap: wrap;-->
+<!--        }-->
+
+<!--        /* ══════════════════════════════════-->
+<!--           PAGE: JOIN SESSION (PARTICIPANT)-->
+<!--        ══════════════════════════════════ */-->
+<!--        .join-layout {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            align-items: center;-->
+<!--            justify-content: center;-->
+<!--            flex: 1;-->
+<!--            padding: 40px;-->
+<!--        }-->
+
+<!--        .join-box {-->
+<!--            width: 100%;-->
+<!--            max-width: 480px;-->
+<!--        }-->
+
+<!--        .join-title {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 36px;-->
+<!--            font-weight: 700;-->
+<!--            margin-bottom: 8px;-->
+<!--        }-->
+
+<!--        .join-subtitle {-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            margin-bottom: 32px;-->
+<!--        }-->
+
+<!--        /* ══════════════════════════════════-->
+<!--           PAGE: QUIZ (PARTICIPANT VIEW)-->
+<!--        ══════════════════════════════════ */-->
+<!--        .quiz-play-layout {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            align-items: center;-->
+<!--            justify-content: center;-->
+<!--            flex: 1;-->
+<!--            padding: 40px;-->
+<!--        }-->
+
+<!--        .quiz-play-box {-->
+<!--            width: 100%;-->
+<!--            max-width: 680px;-->
+<!--        }-->
+
+<!--        .quiz-timer-bar {-->
+<!--            height: 4px;-->
+<!--            background: var(&#45;&#45;bg3);-->
+<!--            border-radius: 100px;-->
+<!--            margin-bottom: 32px;-->
+<!--            overflow: hidden;-->
+<!--        }-->
+
+<!--        .quiz-timer-fill {-->
+<!--            height: 100%;-->
+<!--            background: linear-gradient(90deg, var(&#45;&#45;accent), var(&#45;&#45;accent3));-->
+<!--            border-radius: 100px;-->
+<!--            transition: width 1s linear;-->
+<!--        }-->
+
+<!--        .quiz-question-text {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 28px;-->
+<!--            font-weight: 700;-->
+<!--            margin-bottom: 32px;-->
+<!--            line-height: 1.3;-->
+<!--        }-->
+
+<!--        .quiz-answers {-->
+<!--            display: grid;-->
+<!--            grid-template-columns: 1fr 1fr;-->
+<!--            gap: 12px;-->
+<!--        }-->
+
+<!--        .quiz-answer-btn {-->
+<!--            padding: 20px 24px;-->
+<!--            background: var(&#45;&#45;bg2);-->
+<!--            border: 2px solid var(&#45;&#45;border);-->
+<!--            border-radius: var(&#45;&#45;radius);-->
+<!--            cursor: pointer;-->
+<!--            text-align: left;-->
+<!--            font-family: var(&#45;&#45;font-body);-->
+<!--            font-size: 16px;-->
+<!--            color: var(&#45;&#45;text);-->
+<!--            transition: all 0.2s;-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            gap: 14px;-->
+<!--        }-->
+
+<!--        .quiz-answer-btn:hover:not(:disabled) {-->
+<!--            border-color: var(&#45;&#45;accent);-->
+<!--            background: rgba(124, 92, 252, 0.1);-->
+<!--            transform: translateY(-1px);-->
+<!--        }-->
+
+<!--        .quiz-answer-btn.selected {-->
+<!--            border-color: var(&#45;&#45;accent);-->
+<!--            background: rgba(124, 92, 252, 0.15);-->
+<!--        }-->
+
+<!--        .quiz-answer-btn.correct {-->
+<!--            border-color: var(&#45;&#45;green);-->
+<!--            background: rgba(52, 211, 153, 0.15);-->
+<!--            color: var(&#45;&#45;green);-->
+<!--        }-->
+
+<!--        .quiz-answer-btn.wrong {-->
+<!--            border-color: var(&#45;&#45;red);-->
+<!--            background: rgba(248, 113, 113, 0.1);-->
+<!--            color: var(&#45;&#45;red);-->
+<!--        }-->
+
+<!--        .quiz-answer-btn:disabled {-->
+<!--            cursor: not-allowed;-->
+<!--        }-->
+
+<!--        .answer-key {-->
+<!--            width: 36px;-->
+<!--            height: 36px;-->
+<!--            border-radius: 8px;-->
+<!--            background: var(&#45;&#45;bg3);-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            justify-content: center;-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-weight: 700;-->
+<!--            font-size: 14px;-->
+<!--            flex-shrink: 0;-->
+<!--        }-->
+
+<!--        .score-popup {-->
+<!--            text-align: center;-->
+<!--            padding: 24px;-->
+<!--            background: rgba(52, 211, 153, 0.1);-->
+<!--            border: 1px solid rgba(52, 211, 153, 0.3);-->
+<!--            border-radius: var(&#45;&#45;radius);-->
+<!--            margin-top: 24px;-->
+<!--            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);-->
+<!--        }-->
+
+<!--        @keyframes popIn {-->
+<!--            from {-->
+<!--                opacity: 0;-->
+<!--                transform: scale(0.8);-->
+<!--            }-->
+<!--            to {-->
+<!--                opacity: 1;-->
+<!--                transform: scale(1);-->
+<!--            }-->
+<!--        }-->
+
+<!--        .score-popup-value {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 48px;-->
+<!--            font-weight: 800;-->
+<!--            color: var(&#45;&#45;green);-->
+<!--        }-->
+
+<!--        .score-popup-label {-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            font-size: 14px;-->
+<!--        }-->
+
+<!--        .waiting-screen {-->
+<!--            text-align: center;-->
+<!--            padding: 60px 40px;-->
+<!--        }-->
+
+<!--        .waiting-animation {-->
+<!--            display: flex;-->
+<!--            gap: 8px;-->
+<!--            justify-content: center;-->
+<!--            margin-bottom: 24px;-->
+<!--        }-->
+
+<!--        .waiting-dot {-->
+<!--            width: 10px;-->
+<!--            height: 10px;-->
+<!--            background: var(&#45;&#45;accent);-->
+<!--            border-radius: 50%;-->
+<!--            animation: bounce 1.2s infinite;-->
+<!--        }-->
+
+<!--        .waiting-dot:nth-child(2) {-->
+<!--            animation-delay: 0.2s;-->
+<!--        }-->
+
+<!--        .waiting-dot:nth-child(3) {-->
+<!--            animation-delay: 0.4s;-->
+<!--        }-->
+
+<!--        @keyframes bounce {-->
+<!--            0%, 100% {-->
+<!--                transform: translateY(0);-->
+<!--                opacity: 0.4;-->
+<!--            }-->
+<!--            50% {-->
+<!--                transform: translateY(-12px);-->
+<!--                opacity: 1;-->
+<!--            }-->
+<!--        }-->
+
+<!--        /* ══════════════════════════════════-->
+<!--           PAGE: LEADERBOARD-->
+<!--        ══════════════════════════════════ */-->
+<!--        .leaderboard-layout {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            align-items: center;-->
+<!--            padding: 60px 40px;-->
+<!--            flex: 1;-->
+<!--        }-->
+
+<!--        .leaderboard-title {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 48px;-->
+<!--            font-weight: 800;-->
+<!--            margin-bottom: 8px;-->
+<!--            text-align: center;-->
+<!--        }-->
+
+<!--        .leaderboard-subtitle {-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--            margin-bottom: 48px;-->
+<!--        }-->
+
+<!--        .leaderboard-list {-->
+<!--            width: 100%;-->
+<!--            max-width: 600px;-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            gap: 12px;-->
+<!--        }-->
+
+<!--        .leaderboard-item {-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            gap: 20px;-->
+<!--            padding: 20px 24px;-->
+<!--            background: var(&#45;&#45;bg2);-->
+<!--            border: 1px solid var(&#45;&#45;border);-->
+<!--            border-radius: var(&#45;&#45;radius);-->
+<!--            animation: fadeUp 0.4s ease both;-->
+<!--        }-->
+
+<!--        .leaderboard-item:nth-child(1) {-->
+<!--            border-color: rgba(251, 191, 36, 0.3);-->
+<!--            background: rgba(251, 191, 36, 0.05);-->
+<!--            animation-delay: 0.1s;-->
+<!--        }-->
+
+<!--        .leaderboard-item:nth-child(2) {-->
+<!--            animation-delay: 0.2s;-->
+<!--        }-->
+
+<!--        .leaderboard-item:nth-child(3) {-->
+<!--            animation-delay: 0.3s;-->
+<!--        }-->
+
+<!--        @keyframes fadeUp {-->
+<!--            from {-->
+<!--                opacity: 0;-->
+<!--                transform: translateY(20px);-->
+<!--            }-->
+<!--            to {-->
+<!--                opacity: 1;-->
+<!--                transform: translateY(0);-->
+<!--            }-->
+<!--        }-->
+
+<!--        .rank-number {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 24px;-->
+<!--            font-weight: 800;-->
+<!--            width: 40px;-->
+<!--            text-align: center;-->
+<!--        }-->
+
+<!--        .rank-1 {-->
+<!--            color: var(&#45;&#45;yellow);-->
+<!--        }-->
+
+<!--        .rank-2 {-->
+<!--            color: #94a3b8;-->
+<!--        }-->
+
+<!--        .rank-3 {-->
+<!--            color: #cd7f32;-->
+<!--        }-->
+
+<!--        .leaderboard-name {-->
+<!--            flex: 1;-->
+<!--            font-size: 18px;-->
+<!--            font-weight: 500;-->
+<!--        }-->
+
+<!--        .leaderboard-score {-->
+<!--            font-family: var(&#45;&#45;font-display);-->
+<!--            font-size: 22px;-->
+<!--            font-weight: 700;-->
+<!--            color: var(&#45;&#45;accent3);-->
+<!--        }-->
+
+<!--        /* ── MISC ── */-->
+<!--        .flex {-->
+<!--            display: flex;-->
+<!--        }-->
+
+<!--        .flex-col {-->
+<!--            flex-direction: column;-->
+<!--        }-->
+
+<!--        .gap-8 {-->
+<!--            gap: 8px;-->
+<!--        }-->
+
+<!--        .gap-12 {-->
+<!--            gap: 12px;-->
+<!--        }-->
+
+<!--        .gap-16 {-->
+<!--            gap: 16px;-->
+<!--        }-->
+
+<!--        .gap-20 {-->
+<!--            gap: 20px;-->
+<!--        }-->
+
+<!--        .items-center {-->
+<!--            align-items: center;-->
+<!--        }-->
+
+<!--        .justify-between {-->
+<!--            justify-content: space-between;-->
+<!--        }-->
+
+<!--        .text-center {-->
+<!--            text-align: center;-->
+<!--        }-->
+
+<!--        .text-sm {-->
+<!--            font-size: 13px;-->
+<!--        }-->
+
+<!--        .text-muted {-->
+<!--            color: var(&#45;&#45;text2);-->
+<!--        }-->
+
+<!--        .mt-8 {-->
+<!--            margin-top: 8px;-->
+<!--        }-->
+
+<!--        .mt-16 {-->
+<!--            margin-top: 16px;-->
+<!--        }-->
+
+<!--        .mt-24 {-->
+<!--            margin-top: 24px;-->
+<!--        }-->
+
+<!--        .w-full {-->
+<!--            width: 100%;-->
+<!--        }-->
+
+<!--        @media (max-width: 768px) {-->
+<!--            nav {-->
+<!--                padding: 16px 20px;-->
+<!--            }-->
+
+<!--            .dashboard-layout {-->
+<!--                grid-template-columns: 1fr;-->
+<!--            }-->
+
+<!--            .sidebar {-->
+<!--                display: none;-->
+<!--            }-->
+
+<!--            .main-content {-->
+<!--                padding: 20px;-->
+<!--            }-->
+
+<!--            .form-row {-->
+<!--                grid-template-columns: 1fr;-->
+<!--            }-->
+
+<!--            .answers-grid {-->
+<!--                grid-template-columns: 1fr;-->
+<!--            }-->
+
+<!--            .quiz-answers {-->
+<!--                grid-template-columns: 1fr;-->
+<!--            }-->
+
+<!--            .session-layout {-->
+<!--                grid-template-columns: 1fr;-->
+<!--                padding: 20px;-->
+<!--            }-->
+
+<!--            .answers-preview {-->
+<!--                grid-template-columns: 1fr;-->
+<!--            }-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+
+<!--<div id="toast-container"></div>-->
+
+<!--&lt;!&ndash; ══════════════════════════════════-->
+<!--     MODAL: ADD QUESTION-->
+<!--══════════════════════════════════ &ndash;&gt;-->
+<!--<div class="modal-overlay" id="modal-question">-->
+<!--    <div class="modal">-->
+<!--        <div class="modal-title">Добавить вопрос</div>-->
+<!--        <div style="display:flex;flex-direction:column;gap:16px;">-->
+<!--            <div class="input-group">-->
+<!--                <label class="input-label">Текст вопроса</label>-->
+<!--                <textarea id="q-text" rows="3" placeholder="Введите вопрос..."></textarea>-->
+<!--            </div>-->
+<!--            <div class="input-group">-->
+<!--                <label class="input-label">URL изображения (необязательно)</label>-->
+<!--                <input type="url" id="q-image" placeholder="https://...">-->
+<!--            </div>-->
+<!--            <div class="form-row">-->
+<!--                <div class="input-group">-->
+<!--                    <label class="input-label">Тип вопроса</label>-->
+<!--                    <select id="q-type">-->
+<!--                        <option value="single_choice">Один ответ</option>-->
+<!--                        <option value="multiple_choice">Несколько ответов</option>-->
+<!--                    </select>-->
+<!--                </div>-->
+<!--                <div class="input-group">-->
+<!--                    <label class="input-label">Время (сек)</label>-->
+<!--                    <input type="number" id="q-time" value="30" min="5" max="300">-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            <div>-->
+<!--                <div class="input-label" style="margin-bottom:10px;">Варианты ответов (нажми ● чтобы отметить-->
+<!--                    правильный)-->
+<!--                </div>-->
+<!--                <div style="display:flex;flex-direction:column;gap:8px;" id="answers-inputs">-->
+<!--                    <div class="answer-input-row" data-idx="0">-->
+<!--                        <button class="correct-toggle" onclick="toggleCorrect(this, 0)"-->
+<!--                                title="Отметить правильным"></button>-->
+<!--                        <input placeholder="Вариант A"/>-->
+<!--                    </div>-->
+<!--                    <div class="answer-input-row" data-idx="1">-->
+<!--                        <button class="correct-toggle" onclick="toggleCorrect(this, 1)"-->
+<!--                                title="Отметить правильным"></button>-->
+<!--                        <input placeholder="Вариант B"/>-->
+<!--                    </div>-->
+<!--                    <div class="answer-input-row" data-idx="2">-->
+<!--                        <button class="correct-toggle" onclick="toggleCorrect(this, 2)"-->
+<!--                                title="Отметить правильным"></button>-->
+<!--                        <input placeholder="Вариант C"/>-->
+<!--                    </div>-->
+<!--                    <div class="answer-input-row" data-idx="3">-->
+<!--                        <button class="correct-toggle" onclick="toggleCorrect(this, 3)"-->
+<!--                                title="Отметить правильным"></button>-->
+<!--                        <input placeholder="Вариант D"/>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            <div class="flex gap-12 mt-16">-->
+<!--                <button class="btn btn-primary w-full" onclick="saveQuestion()">Сохранить вопрос</button>-->
+<!--                <button class="btn btn-secondary" onclick="closeModal('modal-question')">Отмена</button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; ══════════════════════════════════-->
+<!--     PAGE: HOME-->
+<!--══════════════════════════════════ &ndash;&gt;-->
+<!--<div class="page active" id="page-home">-->
+<!--    <nav>-->
+<!--        <div class="logo" onclick="showPage('home')">QEasy</div>-->
+<!--        <div class="nav-actions">-->
+<!--            <button class="btn btn-ghost btn-sm" onclick="showPage('join')">Войти по коду</button>-->
+<!--            <button class="btn btn-secondary btn-sm" onclick="showPage('auth', 'login')">Войти</button>-->
+<!--            <button class="btn btn-primary btn-sm" onclick="showPage('auth', 'register')">Регистрация</button>-->
+<!--        </div>-->
+<!--    </nav>-->
+<!--    <div class="hero-glow"></div>-->
+<!--    <div class="hero">-->
+<!--        <div class="hero-tag"><span class="hero-dot"></span> Квизы в реальном времени</div>-->
+<!--        <h1>Создавай. Играй.<br><span>Побеждай.</span></h1>-->
+<!--        <p>Проводи интерактивные квизы с мгновенной синхронизацией, таймером и лидербордом.</p>-->
+<!--        <div class="hero-actions">-->
+<!--            <button class="btn btn-primary btn-lg" onclick="showPage('auth', 'register')">Создать квиз →</button>-->
+<!--            <button class="btn btn-secondary btn-lg" onclick="showPage('join')">Присоединиться</button>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; ══════════════════════════════════-->
+<!--     PAGE: AUTH-->
+<!--══════════════════════════════════ &ndash;&gt;-->
+<!--<div class="page" id="page-auth">-->
+<!--    <nav>-->
+<!--        <div class="logo" onclick="showPage('home')">QEasy</div>-->
+<!--    </nav>-->
+<!--    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px;">-->
+<!--        <div class="auth-box">-->
+
+<!--            &lt;!&ndash; LOGIN &ndash;&gt;-->
+<!--            <div id="auth-login">-->
+<!--                <div class="auth-title">С возвращением</div>-->
+<!--                <div class="auth-subtitle">Войди в свой аккаунт</div>-->
+<!--                <div class="auth-form">-->
+<!--                    <div class="input-group">-->
+<!--                        <label class="input-label">Email</label>-->
+<!--                        <input type="email" id="login-email" placeholder="you@example.com">-->
+<!--                    </div>-->
+<!--                    <div class="input-group">-->
+<!--                        <label class="input-label">Пароль</label>-->
+<!--                        <input type="password" id="login-password" placeholder="••••••••"-->
+<!--                               onkeydown="if(event.key==='Enter')doLogin()">-->
+<!--                    </div>-->
+<!--                    <button class="btn btn-primary btn-lg w-full" onclick="doLogin()" id="btn-login">Войти</button>-->
+<!--                </div>-->
+<!--                <div class="auth-switch">Нет аккаунта? <a onclick="showAuthForm('register')">Зарегистрироваться</a>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; REGISTER &ndash;&gt;-->
+<!--            <div id="auth-register" style="display:none;">-->
+<!--                <div class="auth-title">Добро пожаловать</div>-->
+<!--                <div class="auth-subtitle">Создай аккаунт бесплатно</div>-->
+<!--                <div class="auth-form">-->
+<!--                    <div class="input-group">-->
+<!--                        <label class="input-label">Имя пользователя</label>-->
+<!--                        <input type="text" id="reg-username" placeholder="username">-->
+<!--                    </div>-->
+<!--                    <div class="input-group">-->
+<!--                        <label class="input-label">Email</label>-->
+<!--                        <input type="email" id="reg-email" placeholder="you@example.com">-->
+<!--                    </div>-->
+<!--                    <div class="input-group">-->
+<!--                        <label class="input-label">Пароль</label>-->
+<!--                        <input type="password" id="reg-password" placeholder="минимум 6 символов"-->
+<!--                               onkeydown="if(event.key==='Enter')doRegister()">-->
+<!--                    </div>-->
+<!--                    <button class="btn btn-primary btn-lg w-full" onclick="doRegister()" id="btn-register">Создать-->
+<!--                        аккаунт-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--                <div class="auth-switch">Уже есть аккаунт? <a onclick="showAuthForm('login')">Войти</a></div>-->
+<!--            </div>-->
+
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; ══════════════════════════════════-->
+<!--     PAGE: DASHBOARD-->
+<!--══════════════════════════════════ &ndash;&gt;-->
+<!--<div class="page" id="page-dashboard">-->
+<!--    <nav>-->
+<!--        <div class="logo" onclick="showPage('home')">QEasy</div>-->
+<!--        <div class="nav-actions">-->
+<!--            <span class="text-muted text-sm" id="nav-username"></span>-->
+<!--            <button class="btn btn-ghost btn-sm" onclick="doLogout()">Выйти</button>-->
+<!--        </div>-->
+<!--    </nav>-->
+<!--    <div class="dashboard-layout">-->
+<!--        <div class="sidebar">-->
+<!--            <div class="sidebar-label">Меню</div>-->
+<!--            <div class="sidebar-item active" onclick="switchTab('quizzes')" id="tab-btn-quizzes">-->
+<!--                <span class="sidebar-icon">📋</span> Мои квизы-->
+<!--            </div>-->
+<!--            <div class="sidebar-item" onclick="switchTab('sessions')" id="tab-btn-sessions">-->
+<!--                <span class="sidebar-icon">🎮</span> Сессии-->
+<!--            </div>-->
+<!--            <div class="sidebar-label">Действия</div>-->
+<!--            <div class="sidebar-item" onclick="showPage('create-quiz')">-->
+<!--                <span class="sidebar-icon">✨</span> Новый квиз-->
+<!--            </div>-->
+<!--            <div class="sidebar-item" onclick="showPage('join')">-->
+<!--                <span class="sidebar-icon">🔗</span> Войти по коду-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <div class="main-content">-->
+
+<!--            &lt;!&ndash; TAB: QUIZZES &ndash;&gt;-->
+<!--            <div class="tab-content active" id="tab-quizzes">-->
+<!--                <div class="content-header">-->
+<!--                    <div>-->
+<!--                        <div class="content-title">Мои квизы</div>-->
+<!--                        <div class="content-subtitle">Управляй своими квизами</div>-->
+<!--                    </div>-->
+<!--                    <button class="btn btn-primary" onclick="showPage('create-quiz')">+ Создать квиз</button>-->
+<!--                </div>-->
+<!--                <div class="quiz-grid" id="quizzes-grid">-->
+<!--                    <div class="empty-state" style="grid-column:1/-1;">-->
+<!--                        <div class="spinner"></div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; TAB: SESSIONS &ndash;&gt;-->
+<!--            <div class="tab-content" id="tab-sessions">-->
+<!--                <div class="content-header">-->
+<!--                    <div>-->
+<!--                        <div class="content-title">Сессии</div>-->
+<!--                        <div class="content-subtitle">История проведённых квизов</div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div id="sessions-list">-->
+<!--                    <div class="empty-state">-->
+<!--                        <div class="empty-icon">🎮</div>-->
+<!--                        <div class="empty-title">Нет активных сессий</div>-->
+<!--                        <p>Запусти квиз чтобы начать сессию</p>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; ══════════════════════════════════-->
+<!--     PAGE: CREATE QUIZ-->
+<!--══════════════════════════════════ &ndash;&gt;-->
+<!--<div class="page" id="page-create-quiz">-->
+<!--    <nav>-->
+<!--        <div class="logo" onclick="showPage('home')">QEasy</div>-->
+<!--        <div class="nav-actions">-->
+<!--            <button class="btn btn-ghost btn-sm" onclick="showPage('dashboard')">← Назад</button>-->
+<!--        </div>-->
+<!--    </nav>-->
+<!--    <div class="main-content">-->
+<!--        <div class="create-layout">-->
+<!--            <div class="content-header">-->
+<!--                <div>-->
+<!--                    <div class="content-title">Новый квиз</div>-->
+<!--                    <div class="content-subtitle">Заполни информацию и добавь вопросы</div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            <div class="card" style="margin-bottom:24px;">-->
+<!--                <div class="section-title">Основная информация</div>-->
+<!--                <div style="display:flex;flex-direction:column;gap:16px;">-->
+<!--                    <div class="input-group">-->
+<!--                        <label class="input-label">Название квиза</label>-->
+<!--                        <input type="text" id="quiz-title" placeholder="Например: История России">-->
+<!--                    </div>-->
+<!--                    <div class="form-row">-->
+<!--                        <div class="input-group">-->
+<!--                            <label class="input-label">Категория</label>-->
+<!--                            <input type="text" id="quiz-category" placeholder="Наука, История, Спорт...">-->
+<!--                        </div>-->
+<!--                        <div class="input-group">-->
+<!--                            <label class="input-label">Время на вопрос (сек)</label>-->
+<!--                            <input type="number" id="quiz-time" value="30" min="5" max="300">-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            <div class="card" style="margin-bottom:24px;">-->
+<!--                <div class="flex justify-between items-center" style="margin-bottom:20px;">-->
+<!--                    <div class="section-title" style="margin:0;">Вопросы <span id="questions-count"-->
+<!--                                                                               style="color:var(&#45;&#45;accent3);font-size:14px;">(0)</span>-->
+<!--                    </div>-->
+<!--                    <button class="btn btn-secondary btn-sm" onclick="openAddQuestion()">+ Добавить вопрос</button>-->
+<!--                </div>-->
+<!--                <div class="questions-list" id="questions-list">-->
+<!--                    <div class="empty-state" style="padding:40px;">-->
+<!--                        <div class="empty-icon">❓</div>-->
+<!--                        <div class="empty-title">Нет вопросов</div>-->
+<!--                        <p>Нажми "Добавить вопрос" чтобы начать</p>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            <div class="flex gap-12">-->
+<!--                <button class="btn btn-primary btn-lg" onclick="saveQuiz(false)">Сохранить как черновик</button>-->
+<!--                <button class="btn btn-secondary btn-lg" onclick="saveQuiz(true)">Сохранить и опубликовать</button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; ══════════════════════════════════-->
+<!--     PAGE: SESSION (ORGANIZER)-->
+<!--══════════════════════════════════ &ndash;&gt;-->
+<!--<div class="page" id="page-session">-->
+<!--    <nav>-->
+<!--        <div class="logo" onclick="showPage('home')">QEasy</div>-->
+<!--        <div class="nav-actions">-->
+<!--            <span class="badge badge-active" id="session-status-badge">● Ожидание</span>-->
+<!--            <button class="btn btn-ghost btn-sm" onclick="confirmLeaveSession()">Завершить</button>-->
+<!--        </div>-->
+<!--    </nav>-->
+<!--    <div class="session-layout">-->
+<!--        <div class="session-main">-->
+<!--            &lt;!&ndash; Waiting state &ndash;&gt;-->
+<!--            <div id="organizer-waiting" class="current-question-card">-->
+<!--                <div class="waiting-screen">-->
+<!--                    <div class="waiting-animation">-->
+<!--                        <div class="waiting-dot"></div>-->
+<!--                        <div class="waiting-dot"></div>-->
+<!--                        <div class="waiting-dot"></div>-->
+<!--                    </div>-->
+<!--                    <div class="content-title">Ожидание участников</div>-->
+<!--                    <p class="text-muted mt-8">Поделись кодом комнаты — участники могут подключиться</p>-->
+<!--                    <button class="btn btn-primary btn-lg mt-24" onclick="startSession()">Начать квиз →</button>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            &lt;!&ndash; Active question state &ndash;&gt;-->
+<!--            <div id="organizer-question" class="current-question-card" style="display:none;">-->
+<!--                <div class="question-progress" id="org-q-progress">Вопрос 1 из 5</div>-->
+<!--                <div class="question-text" id="org-q-text">Текст вопроса</div>-->
+<!--                <div id="org-q-image-wrap" style="display:none;margin-bottom:20px;">-->
+<!--                    <img id="org-q-image" src=""-->
+<!--                         style="max-width:100%;border-radius:12px;max-height:200px;object-fit:cover;">-->
+<!--                </div>-->
+<!--                <div class="answers-preview" id="org-answers"></div>-->
+<!--                <div class="session-controls mt-24">-->
+<!--                    <button class="btn btn-primary" onclick="nextQuestion()" id="btn-next-q">Следующий вопрос →</button>-->
+<!--                    <button class="btn btn-danger" onclick="finishSession()">Завершить квиз</button>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <div class="session-sidebar-panel">-->
+<!--            <div class="room-code-display">-->
+<!--                <div class="room-code-label">Код комнаты</div>-->
+<!--                <div class="room-code-value" id="display-room-code">——</div>-->
+<!--                <button class="btn btn-ghost btn-sm mt-8" onclick="copyRoomCode()">📋 Скопировать</button>-->
+<!--            </div>-->
+<!--            <div class="card">-->
+<!--                <div class="flex justify-between items-center" style="margin-bottom:12px;">-->
+<!--                    <div style="font-weight:600;font-size:14px;">Участники</div>-->
+<!--                    <span class="badge badge-active" id="participant-count">0</span>-->
+<!--                </div>-->
+<!--                <div class="participants-list" id="participants-list">-->
+<!--                    <div class="text-muted text-sm text-center" style="padding:20px;">Ожидание подключения...</div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; ══════════════════════════════════-->
+<!--     PAGE: JOIN SESSION-->
+<!--══════════════════════════════════ &ndash;&gt;-->
+<!--<div class="page" id="page-join">-->
+<!--    <nav>-->
+<!--        <div class="logo" onclick="showPage('home')">QEasy</div>-->
+<!--        <div class="nav-actions" id="join-nav-actions">-->
+<!--            <button class="btn btn-secondary btn-sm" onclick="showPage('auth', 'login')">Войти</button>-->
+<!--        </div>-->
+<!--    </nav>-->
+<!--    <div class="join-layout">-->
+<!--        <div class="join-box card">-->
+<!--            <div class="join-title">Присоединиться</div>-->
+<!--            <div class="join-subtitle">Введи код комнаты чтобы войти в квиз</div>-->
+<!--            <div style="display:flex;flex-direction:column;gap:16px;">-->
+<!--                <div class="input-group">-->
+<!--                    <label class="input-label">Код комнаты</label>-->
+<!--                    <input type="text" id="join-room-code" placeholder="XXXXXX"-->
+<!--                           style="font-family:var(&#45;&#45;font-display);font-size:28px;letter-spacing:0.1em;text-transform:uppercase;text-align:center;"-->
+<!--                           maxlength="6" oninput="this.value=this.value.toUpperCase()"-->
+<!--                           onkeydown="if(event.key==='Enter')doJoin()">-->
+<!--                </div>-->
+<!--                <button class="btn btn-primary btn-lg w-full" onclick="doJoin()" id="btn-join">Войти в квиз →</button>-->
+<!--                <button class="btn btn-ghost btn-sm w-full" onclick="showPage('dashboard')" id="btn-to-dashboard"-->
+<!--                        style="display:none;">← Мои квизы-->
+<!--                </button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; ══════════════════════════════════-->
+<!--     PAGE: QUIZ PLAY (PARTICIPANT)-->
+<!--══════════════════════════════════ &ndash;&gt;-->
+<!--<div class="page" id="page-quiz-play">-->
+<!--    <nav>-->
+<!--        <div class="logo" onclick="showPage('home')">QEasy</div>-->
+<!--        <div class="nav-actions">-->
+<!--            <div class="flex items-center gap-12">-->
+<!--                <span class="text-muted text-sm">Мои баллы:</span>-->
+<!--                <span style="font-family:var(&#45;&#45;font-display);font-size:20px;font-weight:700;color:var(&#45;&#45;accent3);"-->
+<!--                      id="my-total-score">0</span>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </nav>-->
+<!--    <div class="quiz-play-layout">-->
+<!--        <div class="quiz-play-box">-->
+
+<!--            &lt;!&ndash; Waiting for session start &ndash;&gt;-->
+<!--            <div id="play-waiting">-->
+<!--                <div class="waiting-screen">-->
+<!--                    <div class="waiting-animation">-->
+<!--                        <div class="waiting-dot"></div>-->
+<!--                        <div class="waiting-dot"></div>-->
+<!--                        <div class="waiting-dot"></div>-->
+<!--                    </div>-->
+<!--                    <div class="content-title">Ожидание начала</div>-->
+<!--                    <p class="text-muted mt-8">Организатор скоро запустит квиз</p>-->
+<!--                    <div class="mt-24 flex gap-12 justify-center">-->
+<!--                        <div class="badge badge-active">● Подключено</div>-->
+<!--                        <div class="text-muted text-sm" id="play-room-display"></div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; Active question &ndash;&gt;-->
+<!--            <div id="play-question" style="display:none;">-->
+<!--                <div class="quiz-timer-bar">-->
+<!--                    <div class="quiz-timer-fill" id="timer-fill" style="width:100%;"></div>-->
+<!--                </div>-->
+<!--                <div class="question-progress text-muted text-sm" id="play-q-progress">Вопрос 1</div>-->
+<!--                <div class="quiz-question-text" id="play-q-text">Вопрос</div>-->
+<!--                <div id="play-q-image-wrap" style="display:none;margin-bottom:20px;">-->
+<!--                    <img id="play-q-image" src=""-->
+<!--                         style="max-width:100%;border-radius:12px;max-height:200px;object-fit:cover;">-->
+<!--                </div>-->
+<!--                <div class="quiz-answers" id="play-answers"></div>-->
+<!--                <div id="score-result" style="display:none;"></div>-->
+<!--            </div>-->
+
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; ══════════════════════════════════-->
+<!--     PAGE: LEADERBOARD-->
+<!--══════════════════════════════════ &ndash;&gt;-->
+<!--<div class="page" id="page-leaderboard">-->
+<!--    <nav>-->
+<!--        <div class="logo" onclick="showPage('home')">QEasy</div>-->
+<!--        <div class="nav-actions">-->
+<!--            <button class="btn btn-primary btn-sm" onclick="showPage('dashboard')">Мои квизы</button>-->
+<!--        </div>-->
+<!--    </nav>-->
+<!--    <div class="leaderboard-layout">-->
+<!--        <div class="leaderboard-title">🏆 Результаты</div>-->
+<!--        <div class="leaderboard-subtitle" id="leaderboard-subtitle">Финальная таблица лидеров</div>-->
+<!--        <div class="leaderboard-list" id="leaderboard-list"></div>-->
+<!--        <div class="flex gap-12 mt-24">-->
+<!--            <button class="btn btn-primary" onclick="showPage('dashboard')">Создать ещё квиз</button>-->
+<!--            <button class="btn btn-secondary" onclick="showPage('join')">Сыграть ещё раз</button>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+
+<!--<script>-->
+<!--    // ══════════════════════════════════-->
+<!--    // CONFIG-->
+<!--    // ══════════════════════════════════-->
+<!--    const API = '/api';-->
+<!--    const WS_BASE = 'ws://' + window.location.host + '/api/ws';-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // STATE-->
+<!--    // ══════════════════════════════════-->
+<!--    let state = {-->
+<!--        token: localStorage.getItem('token') || null,-->
+<!--        user: JSON.parse(localStorage.getItem('user') || 'null'),-->
+<!--        pendingQuestions: [],-->
+<!--        ws: null,-->
+<!--        currentSession: null,-->
+<!--        participantId: null,-->
+<!--        currentQuestion: null,-->
+<!--        currentQuestionId: null,-->
+<!--        questionStartTime: null,-->
+<!--        timerInterval: null,-->
+<!--        pollInterval: null,-->
+<!--        myTotalScore: 0,-->
+<!--        isOrganizer: false,-->
+<!--        quizData: null,-->
+<!--        returnTo: null,-->
+<!--        editingQuizId: null,      // ID квиза который редактируем-->
+<!--        editingQuestionIdx: null, // индекс вопроса при редактировании-->
+<!--    };-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // ROUTER-->
+<!--    // ══════════════════════════════════-->
+<!--    function showPage(page, sub) {-->
+<!--        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));-->
+<!--        const el = document.getElementById('page-' + page);-->
+<!--        if (el) el.classList.add('active');-->
+
+<!--        // сохраняем страницу — session/quiz-play нельзя восстановить без WS-->
+<!--        if (!['session', 'quiz-play', 'home'].includes(page)) {-->
+<!--            sessionStorage.setItem('qeasy_page', page);-->
+<!--            sessionStorage.setItem('qeasy_sub', sub || '');-->
+<!--        }-->
+
+<!--        if (page === 'auth') showAuthForm(sub || 'login');-->
+<!--        if (page === 'dashboard') {-->
+<!--            updateNavUser();-->
+<!--            loadQuizzes();-->
+<!--        }-->
+<!--        if (page === 'join') {-->
+<!--            const btnD = document.getElementById('btn-to-dashboard');-->
+<!--            if (btnD) btnD.style.display = state.token ? 'block' : 'none';-->
+<!--            const navA = document.getElementById('join-nav-actions');-->
+<!--            if (navA) {-->
+<!--                navA.innerHTML = state.token-->
+<!--                    ? `<button class="btn btn-secondary btn-sm" onclick="showPage('dashboard')">← Дашборд</button>`-->
+<!--                    : `<button class="btn btn-secondary btn-sm" onclick="goToLoginFromJoin()">Войти</button>`;-->
+<!--            }-->
+<!--        }-->
+<!--        if (page === 'create-quiz' && !sub) {-->
+<!--            // сброс формы при новом квизе-->
+<!--            if (!state.editingQuizId) resetCreateForm();-->
+<!--        }-->
+<!--        if (page === 'home' && state.token) {-->
+<!--            showPage('dashboard');-->
+<!--            return;-->
+<!--        }-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // API-->
+<!--    // ══════════════════════════════════-->
+<!--    async function api(method, path, body) {-->
+<!--        const opts = {method, headers: {'Content-Type': 'application/json'}};-->
+<!--        if (state.token) opts.headers['Authorization'] = 'Bearer ' + state.token;-->
+<!--        if (body) opts.body = JSON.stringify(body);-->
+<!--        const res = await fetch(API + path, opts);-->
+<!--        const data = await res.json().catch(() => ({}));-->
+<!--        if (!res.ok) throw new Error(data.error || 'Ошибка запроса');-->
+<!--        return data;-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // TOAST-->
+<!--    // ══════════════════════════════════-->
+<!--    function toast(msg, type = 'info') {-->
+<!--        const el = document.createElement('div');-->
+<!--        el.className = `toast toast-${type}`;-->
+<!--        el.textContent = msg;-->
+<!--        document.getElementById('toast-container').appendChild(el);-->
+<!--        setTimeout(() => el.remove(), 3500);-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // MODAL-->
+<!--    // ══════════════════════════════════-->
+<!--    function openModal(id) {-->
+<!--        document.getElementById(id).classList.add('active');-->
+<!--    }-->
+
+<!--    function closeModal(id) {-->
+<!--        document.getElementById(id).classList.remove('active');-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // AUTH-->
+<!--    // ══════════════════════════════════-->
+<!--    function showAuthForm(form) {-->
+<!--        document.getElementById('auth-login').style.display = form === 'login' ? 'block' : 'none';-->
+<!--        document.getElementById('auth-register').style.display = form === 'register' ? 'block' : 'none';-->
+<!--    }-->
+
+<!--    function goToLoginFromJoin() {-->
+<!--        state.returnTo = 'join';-->
+<!--        showPage('auth', 'login');-->
+<!--    }-->
+
+<!--    async function doLogin() {-->
+<!--        const email = document.getElementById('login-email').value.trim();-->
+<!--        const password = document.getElementById('login-password').value;-->
+<!--        if (!email || !password) {-->
+<!--            toast('Заполни все поля', 'error');-->
+<!--            return;-->
+<!--        }-->
+<!--        const btn = document.getElementById('btn-login');-->
+<!--        btn.disabled = true;-->
+<!--        btn.innerHTML = '<span class="spinner"></span>';-->
+<!--        try {-->
+<!--            const data = await api('POST', '/login', {email, password});-->
+<!--            state.token = data.token;-->
+<!--            localStorage.setItem('token', data.token);-->
+<!--            const profile = await api('GET', '/profile');-->
+<!--            state.user = profile;-->
+<!--            localStorage.setItem('user', JSON.stringify(profile));-->
+<!--            toast('Добро пожаловать!', 'success');-->
+<!--            const ret = state.returnTo;-->
+<!--            state.returnTo = null;-->
+<!--            showPage(ret || 'dashboard');-->
+<!--        } catch (e) {-->
+<!--            toast(e.message, 'error');-->
+<!--        } finally {-->
+<!--            btn.disabled = false;-->
+<!--            btn.textContent = 'Войти';-->
+<!--        }-->
+<!--    }-->
+
+<!--    async function doRegister() {-->
+<!--        const username = document.getElementById('reg-username').value.trim();-->
+<!--        const email = document.getElementById('reg-email').value.trim();-->
+<!--        const password = document.getElementById('reg-password').value;-->
+<!--        if (!username || !email || !password) {-->
+<!--            toast('Заполни все поля', 'error');-->
+<!--            return;-->
+<!--        }-->
+<!--        if (password.length < 6) {-->
+<!--            toast('Пароль минимум 6 символов', 'error');-->
+<!--            return;-->
+<!--        }-->
+<!--        const btn = document.getElementById('btn-register');-->
+<!--        btn.disabled = true;-->
+<!--        btn.innerHTML = '<span class="spinner"></span>';-->
+<!--        try {-->
+<!--            await api('POST', '/register', {username, email, password});-->
+<!--            const data = await api('POST', '/login', {email, password});-->
+<!--            state.token = data.token;-->
+<!--            localStorage.setItem('token', data.token);-->
+<!--            const profile = await api('GET', '/profile');-->
+<!--            state.user = profile;-->
+<!--            localStorage.setItem('user', JSON.stringify(profile));-->
+<!--            toast('Аккаунт создан!', 'success');-->
+<!--            const ret = state.returnTo;-->
+<!--            state.returnTo = null;-->
+<!--            showPage(ret || 'dashboard');-->
+<!--        } catch (e) {-->
+<!--            toast(e.message, 'error');-->
+<!--        } finally {-->
+<!--            btn.disabled = false;-->
+<!--            btn.textContent = 'Создать аккаунт';-->
+<!--        }-->
+<!--    }-->
+
+<!--    function doLogout() {-->
+<!--        state.token = null;-->
+<!--        state.user = null;-->
+<!--        localStorage.removeItem('token');-->
+<!--        localStorage.removeItem('user');-->
+<!--        sessionStorage.removeItem('qeasy_page');-->
+<!--        showPage('home');-->
+<!--        toast('Вышел из аккаунта', 'info');-->
+<!--    }-->
+
+<!--    function updateNavUser() {-->
+<!--        const el = document.getElementById('nav-username');-->
+<!--        if (el && state.user) el.textContent = state.user.username || state.user.email;-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // DASHBOARD TABS-->
+<!--    // ══════════════════════════════════-->
+<!--    function switchTab(tab) {-->
+<!--        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));-->
+<!--        document.querySelectorAll('[id^="tab-btn-"]').forEach(t => t.classList.remove('active'));-->
+<!--        document.getElementById('tab-' + tab).classList.add('active');-->
+<!--        document.getElementById('tab-btn-' + tab).classList.add('active');-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // QUIZZES LIST-->
+<!--    // ══════════════════════════════════-->
+<!--    async function loadQuizzes() {-->
+<!--        if (!state.token) return;-->
+<!--        const grid = document.getElementById('quizzes-grid');-->
+<!--        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="spinner"></div></div>';-->
+<!--        try {-->
+<!--            const quizzes = await api('GET', '/quizzes');-->
+<!--            if (!quizzes || quizzes.length === 0) {-->
+<!--                grid.innerHTML = `-->
+<!--        <div class="empty-state" style="grid-column:1/-1;">-->
+<!--          <div class="empty-icon">📋</div>-->
+<!--          <div class="empty-title">Нет квизов</div>-->
+<!--          <p>Создай свой первый квиз</p>-->
+<!--          <button class="btn btn-primary mt-16" onclick="showPage('create-quiz')">+ Создать квиз</button>-->
+<!--        </div>`;-->
+<!--                return;-->
+<!--            }-->
+<!--            grid.innerHTML = quizzes.map(q => {-->
+<!--                const id = q.ID || q.id;-->
+<!--                const status = (q.Status || q.status || 'draft').toLowerCase();-->
+<!--                const questions = q.Questions || q.questions || [];-->
+<!--                return `-->
+<!--      <div class="quiz-card">-->
+<!--        <div class="flex justify-between items-center" style="margin-bottom:8px;">-->
+<!--          <span class="badge badge-${status}">${statusLabel(status)}</span>-->
+<!--          <span class="text-muted text-sm">${q.Category || q.category || '—'}</span>-->
+<!--        </div>-->
+<!--        <div class="quiz-card-title">${q.Title || q.title}</div>-->
+<!--        <div class="quiz-card-meta">-->
+<!--          <span class="quiz-card-stat">⏱ ${q.TimePerQuestion || q.time_per_question}с</span>-->
+<!--          <span class="quiz-card-stat">❓ ${questions.length} вопросов</span>-->
+<!--        </div>-->
+<!--        <div class="quiz-card-actions">-->
+<!--          <button class="btn btn-primary btn-sm" onclick="launchQuiz('${id}')">▶ Запустить</button>-->
+<!--          <button class="btn btn-secondary btn-sm" onclick="editQuiz('${id}')">✏ Изменить</button>-->
+<!--        </div>-->
+<!--      </div>`;-->
+<!--            }).join('');-->
+<!--        } catch (e) {-->
+<!--            grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><p class="text-muted">Ошибка: ${e.message}</p></div>`;-->
+<!--        }-->
+<!--    }-->
+
+<!--    function statusLabel(s) {-->
+<!--        return {-->
+<!--            draft: 'Черновик',-->
+<!--            published: 'Опубликован',-->
+<!--            active: 'Активен',-->
+<!--            finished: 'Завершён'-->
+<!--        }[s] || s || 'Черновик';-->
+<!--    }-->
+
+<!--    async function launchQuiz(quizId) {-->
+<!--        try {-->
+<!--            const session = await api('POST', '/sessions', {quiz_id: quizId});-->
+<!--            state.currentSession = {id: session.session_id, roomCode: session.room_code, quizId};-->
+<!--            state.isOrganizer = true;-->
+<!--            state.quizData = await api('GET', '/quizzes/' + quizId);-->
+<!--            setupOrganizerSession();-->
+<!--        } catch (e) {-->
+<!--            toast(e.message, 'error');-->
+<!--        }-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // CREATE / EDIT QUIZ-->
+<!--    // ══════════════════════════════════-->
+<!--    function resetCreateForm() {-->
+<!--        document.getElementById('quiz-title').value = '';-->
+<!--        document.getElementById('quiz-category').value = '';-->
+<!--        document.getElementById('quiz-time').value = '30';-->
+<!--        state.pendingQuestions = [];-->
+<!--        state.editingQuizId = null;-->
+<!--        state.editingQuestionIdx = null;-->
+<!--        renderPendingQuestions();-->
+<!--        // обновляем заголовок-->
+<!--        const title = document.querySelector('#page-create-quiz .content-title');-->
+<!--        if (title) title.textContent = 'Новый квиз';-->
+<!--    }-->
+
+<!--    async function editQuiz(id) {-->
+<!--        try {-->
+<!--            const quiz = await api('GET', '/quizzes/' + id);-->
+<!--            state.editingQuizId = id;-->
+<!--            document.getElementById('quiz-title').value = quiz.Title || quiz.title || '';-->
+<!--            document.getElementById('quiz-category').value = quiz.Category || quiz.category || '';-->
+<!--            document.getElementById('quiz-time').value = quiz.TimePerQuestion || quiz.time_per_question || 30;-->
+
+<!--            const questions = quiz.Questions || quiz.questions || [];-->
+<!--            state.pendingQuestions = questions.map(q => ({-->
+<!--                id: q.ID || q.id,-->
+<!--                text: q.Text || q.text,-->
+<!--                image_url: q.ImageURL || q.image_url || '',-->
+<!--                type: q.Type || q.type,-->
+<!--                time_limit: q.TimeLimit || q.time_limit,-->
+<!--                answers: (q.Answers || q.answers || []).map(a => ({-->
+<!--                    id: a.ID || a.id,-->
+<!--                    text: a.Text || a.text,-->
+<!--                    is_correct: a.IsCorrect || a.is_correct,-->
+<!--                }))-->
+<!--            }));-->
+
+<!--            renderPendingQuestions();-->
+<!--            const titleEl = document.querySelector('#page-create-quiz .content-title');-->
+<!--            if (titleEl) titleEl.textContent = 'Редактировать квиз';-->
+<!--            showPage('create-quiz', 'edit');-->
+<!--        } catch (e) {-->
+<!--            toast(e.message, 'error');-->
+<!--        }-->
+<!--    }-->
+
+<!--    function openAddQuestion() {-->
+<!--        state.editingQuestionIdx = null;-->
+<!--        clearQuestionModal();-->
+<!--        openModal('modal-question');-->
+<!--    }-->
+
+<!--    function openEditQuestion(idx) {-->
+<!--        state.editingQuestionIdx = idx;-->
+<!--        const q = state.pendingQuestions[idx];-->
+<!--        document.getElementById('q-text').value = q.text || '';-->
+<!--        document.getElementById('q-image').value = q.image_url || '';-->
+<!--        document.getElementById('q-type').value = q.type || 'single_choice';-->
+<!--        document.getElementById('q-time').value = q.time_limit || 30;-->
+
+<!--        const rows = document.querySelectorAll('#answers-inputs .answer-input-row');-->
+<!--        rows.forEach((row, i) => {-->
+<!--            const a = q.answers[i];-->
+<!--            const input = row.querySelector('input');-->
+<!--            const toggle = row.querySelector('.correct-toggle');-->
+<!--            input.value = a ? a.text : '';-->
+<!--            if (a && a.is_correct) {-->
+<!--                toggle.classList.add('active');-->
+<!--                row.classList.add('correct');-->
+<!--            } else {-->
+<!--                toggle.classList.remove('active');-->
+<!--                row.classList.remove('correct');-->
+<!--            }-->
+<!--        });-->
+
+<!--        openModal('modal-question');-->
+<!--    }-->
+
+<!--    function clearQuestionModal() {-->
+<!--        document.getElementById('q-text').value = '';-->
+<!--        document.getElementById('q-image').value = '';-->
+<!--        document.getElementById('q-type').value = 'single_choice';-->
+<!--        document.getElementById('q-time').value = '30';-->
+<!--        document.querySelectorAll('#answers-inputs .answer-input-row input').forEach(i => i.value = '');-->
+<!--        document.querySelectorAll('.correct-toggle').forEach(b => b.classList.remove('active'));-->
+<!--        document.querySelectorAll('.answer-input-row').forEach(r => r.classList.remove('correct'));-->
+<!--    }-->
+
+<!--    function toggleCorrect(btn, idx) {-->
+<!--        const qType = document.getElementById('q-type').value;-->
+<!--        if (qType === 'single_choice') {-->
+<!--            document.querySelectorAll('#answers-inputs .correct-toggle').forEach(b => {-->
+<!--                b.classList.remove('active');-->
+<!--                b.closest('.answer-input-row').classList.remove('correct');-->
+<!--            });-->
+<!--        }-->
+<!--        btn.classList.toggle('active');-->
+<!--        btn.closest('.answer-input-row').classList.toggle('correct');-->
+<!--    }-->
+
+<!--    function saveQuestion() {-->
+<!--        const text = document.getElementById('q-text').value.trim();-->
+<!--        const image = document.getElementById('q-image').value.trim();-->
+<!--        const type = document.getElementById('q-type').value;-->
+<!--        const timeLimit = parseInt(document.getElementById('q-time').value) || 30;-->
+<!--        if (!text) {-->
+<!--            toast('Введи текст вопроса', 'error');-->
+<!--            return;-->
+<!--        }-->
+
+<!--        const rows = document.querySelectorAll('#answers-inputs .answer-input-row');-->
+<!--        const answers = [];-->
+<!--        rows.forEach(row => {-->
+<!--            const val = row.querySelector('input').value.trim();-->
+<!--            const isCorrect = row.querySelector('.correct-toggle').classList.contains('active');-->
+<!--            if (val) answers.push({text: val, is_correct: isCorrect});-->
+<!--        });-->
+
+<!--        if (answers.length < 2) {-->
+<!--            toast('Добавь минимум 2 варианта ответа', 'error');-->
+<!--            return;-->
+<!--        }-->
+<!--        if (!answers.some(a => a.is_correct)) {-->
+<!--            toast('Отметь хотя бы один правильный ответ', 'error');-->
+<!--            return;-->
+<!--        }-->
+
+<!--        const q = {text, image_url: image, type, time_limit: timeLimit, answers};-->
+
+<!--        if (state.editingQuestionIdx !== null) {-->
+<!--            // сохраняем id если редактируем существующий-->
+<!--            if (state.pendingQuestions[state.editingQuestionIdx].id) {-->
+<!--                q.id = state.pendingQuestions[state.editingQuestionIdx].id;-->
+<!--            }-->
+<!--            state.pendingQuestions[state.editingQuestionIdx] = q;-->
+<!--            toast('Вопрос обновлён', 'success');-->
+<!--        } else {-->
+<!--            state.pendingQuestions.push(q);-->
+<!--            toast('Вопрос добавлен', 'success');-->
+<!--        }-->
+
+<!--        state.editingQuestionIdx = null;-->
+<!--        renderPendingQuestions();-->
+<!--        closeModal('modal-question');-->
+<!--    }-->
+
+<!--    function renderPendingQuestions() {-->
+<!--        const list = document.getElementById('questions-list');-->
+<!--        const count = document.getElementById('questions-count');-->
+<!--        count.textContent = `(${state.pendingQuestions.length})`;-->
+<!--        if (state.pendingQuestions.length === 0) {-->
+<!--            list.innerHTML = `<div class="empty-state" style="padding:40px;"><div class="empty-icon">❓</div><div class="empty-title">Нет вопросов</div></div>`;-->
+<!--            return;-->
+<!--        }-->
+<!--        const letters = ['A', 'B', 'C', 'D'];-->
+<!--        list.innerHTML = state.pendingQuestions.map((q, i) => `-->
+<!--    <div class="question-item">-->
+<!--      <div class="question-number">Вопрос ${i + 1}</div>-->
+<!--      <div style="font-weight:500;margin-bottom:12px;">${q.text}</div>-->
+<!--      ${q.image_url ? `<div style="font-size:12px;color:var(&#45;&#45;text2);margin-bottom:8px;">🖼 ${q.image_url}</div>` : ''}-->
+<!--      <div class="answers-grid">-->
+<!--        ${q.answers.map((a, ai) => `-->
+<!--          <div class="answer-input-row ${a.is_correct ? 'correct' : ''}" style="cursor:default;">-->
+<!--            <div style="width:20px;text-align:center;font-size:12px;font-weight:600;color:${a.is_correct ? 'var(&#45;&#45;green)' : 'var(&#45;&#45;text2)'};">${letters[ai] || '?'}</div>-->
+<!--            <span style="font-size:14px;">${a.text}</span>-->
+<!--          </div>-->
+<!--        `).join('')}-->
+<!--      </div>-->
+<!--      <div class="flex gap-8 mt-16">-->
+<!--        <button class="btn btn-secondary btn-sm" onclick="openEditQuestion(${i})">✏ Изменить</button>-->
+<!--        <button class="btn btn-danger btn-sm" onclick="removeQuestion(${i})">Удалить</button>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  `).join('');-->
+<!--    }-->
+
+<!--    function removeQuestion(idx) {-->
+<!--        state.pendingQuestions.splice(idx, 1);-->
+<!--        renderPendingQuestions();-->
+<!--    }-->
+
+<!--    async function saveQuiz(publish) {-->
+<!--        const title = document.getElementById('quiz-title').value.trim();-->
+<!--        const category = document.getElementById('quiz-category').value.trim();-->
+<!--        const timePerQuestion = parseInt(document.getElementById('quiz-time').value) || 30;-->
+<!--        if (!title) {-->
+<!--            toast('Введи название квиза', 'error');-->
+<!--            return;-->
+<!--        }-->
+<!--        if (state.pendingQuestions.length === 0) {-->
+<!--            toast('Добавь хотя бы один вопрос', 'error');-->
+<!--            return;-->
+<!--        }-->
+
+<!--        try {-->
+<!--            let quizId = state.editingQuizId;-->
+
+<!--            if (quizId) {-->
+<!--                // обновляем существующий квиз-->
+<!--                // NOTE: бэкенд пока не имеет PATCH /quizzes/:id — добавим только вопросы-->
+<!--                // для новых вопросов (без id) добавляем через API-->
+<!--                for (const q of state.pendingQuestions) {-->
+<!--                    if (!q.id) {-->
+<!--                        await api('POST', `/quizzes/${quizId}/questions`, q);-->
+<!--                    }-->
+<!--                }-->
+<!--            } else {-->
+<!--                // создаём новый-->
+<!--                const quiz = await api('POST', '/quizzes', {title, category, time_per_question: timePerQuestion});-->
+<!--                quizId = quiz.ID || quiz.id;-->
+<!--                for (const q of state.pendingQuestions) {-->
+<!--                    await api('POST', `/quizzes/${quizId}/questions`, q);-->
+<!--                }-->
+<!--            }-->
+
+<!--            if (publish) await api('POST', `/quizzes/${quizId}/publish`);-->
+
+<!--            state.pendingQuestions = [];-->
+<!--            state.editingQuizId = null;-->
+<!--            toast(publish ? 'Квиз опубликован!' : 'Сохранено', 'success');-->
+<!--            showPage('dashboard');-->
+<!--        } catch (e) {-->
+<!--            toast(e.message, 'error');-->
+<!--        }-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // SESSION — ORGANIZER-->
+<!--    // ══════════════════════════════════-->
+<!--    function setupOrganizerSession() {-->
+<!--        document.getElementById('display-room-code').textContent = state.currentSession.roomCode;-->
+<!--        document.getElementById('organizer-waiting').style.display = 'block';-->
+<!--        document.getElementById('organizer-question').style.display = 'none';-->
+<!--        document.getElementById('session-status-badge').textContent = '● Ожидание';-->
+<!--        document.getElementById('participants-list').innerHTML =-->
+<!--            '<div class="text-muted text-sm text-center" style="padding:20px;">Ожидание подключения...</div>';-->
+<!--        showPage('session');-->
+<!--        connectWebSocket(true);-->
+<!--        startParticipantPolling();-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // PARTICIPANT POLLING-->
+<!--    // ══════════════════════════════════-->
+<!--    function startParticipantPolling() {-->
+<!--        stopParticipantPolling();-->
+<!--        refreshParticipants();-->
+<!--        state.pollInterval = setInterval(refreshParticipants, 3000);-->
+<!--    }-->
+
+<!--    function stopParticipantPolling() {-->
+<!--        if (state.pollInterval) {-->
+<!--            clearInterval(state.pollInterval);-->
+<!--            state.pollInterval = null;-->
+<!--        }-->
+<!--    }-->
+
+<!--    async function refreshParticipants() {-->
+<!--        if (!state.currentSession || !state.token) return;-->
+<!--        try {-->
+<!--            const participants = await api('GET', `/sessions/${state.currentSession.id}/leaderboard`);-->
+<!--            const list = document.getElementById('participants-list');-->
+<!--            const countEl = document.getElementById('participant-count');-->
+<!--            if (!list) return;-->
+<!--            if (!participants || participants.length === 0) {-->
+<!--                list.innerHTML = '<div class="text-muted text-sm text-center" style="padding:20px;">Ожидание подключения...</div>';-->
+<!--                if (countEl) countEl.textContent = '0';-->
+<!--                return;-->
+<!--            }-->
+<!--            if (countEl) countEl.textContent = String(participants.length);-->
+<!--            list.innerHTML = participants.map(p => `-->
+<!--      <div class="participant-item">-->
+<!--        <span class="participant-name">${p.Username || p.username || p.UserID || p.user_id || '—'}</span>-->
+<!--        <span class="participant-score">${p.TotalScore || p.total_score || 0}</span>-->
+<!--      </div>-->
+<!--    `).join('');-->
+<!--        } catch (e) { /* тихо */-->
+<!--        }-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // WEBSOCKET-->
+<!--    // ══════════════════════════════════-->
+<!--    function connectWebSocket(isOrganizer) {-->
+<!--        if (state.ws) {-->
+<!--            state.ws.close();-->
+<!--            state.ws = null;-->
+<!--        }-->
+<!--        const url = `${WS_BASE}/${state.currentSession.id}?token=${state.token}`;-->
+<!--        state.ws = new WebSocket(url);-->
+<!--        state.ws.onopen = () => toast('Подключено к сессии', 'success');-->
+<!--        state.ws.onmessage = (e) => {-->
+<!--            try {-->
+<!--                handleWsEvent(JSON.parse(e.data), isOrganizer);-->
+<!--            } catch (err) {-->
+<!--                console.error('WS parse error', err);-->
+<!--            }-->
+<!--        };-->
+<!--        state.ws.onclose = () => toast('Соединение закрыто', 'info');-->
+<!--        state.ws.onerror = () => toast('Ошибка WebSocket', 'error');-->
+<!--    }-->
+
+<!--    function sendWs(type, payload = {}) {-->
+<!--        if (state.ws && state.ws.readyState === WebSocket.OPEN) {-->
+<!--            state.ws.send(JSON.stringify({type, payload}));-->
+<!--        } else {-->
+<!--            toast('Нет соединения с сервером', 'error');-->
+<!--        }-->
+<!--    }-->
+
+<!--    function handleWsEvent(event, isOrganizer) {-->
+<!--        switch (event.type) {-->
+<!--            case 'session_started':-->
+<!--            case 'next_question':-->
+<!--                showQuestion(event.payload, isOrganizer);-->
+<!--                break;-->
+<!--            case 'answer_submitted':-->
+<!--                showScoreResult(event.payload.score);-->
+<!--                break;-->
+<!--            case 'leaderboard':-->
+<!--                showLeaderboard(event.payload);-->
+<!--                break;-->
+<!--            case 'error':-->
+<!--                toast(event.payload.message || 'Ошибка сервера', 'error');-->
+<!--                break;-->
+<!--        }-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // QUESTION DISPLAY-->
+<!--    // ══════════════════════════════════-->
+<!--    function showQuestion(q, isOrganizer) {-->
+<!--        state.currentQuestion = q;-->
+<!--        state.currentQuestionId = q.question_id || '';-->
+<!--        state.questionStartTime = Date.now();-->
+<!--        const letters = ['A', 'B', 'C', 'D'];-->
+
+<!--        if (isOrganizer) {-->
+<!--            document.getElementById('organizer-waiting').style.display = 'none';-->
+<!--            document.getElementById('organizer-question').style.display = 'block';-->
+<!--            document.getElementById('session-status-badge').textContent = '● Активен';-->
+
+<!--            const questions = state.quizData-->
+<!--                ? (state.quizData.Questions || state.quizData.questions || [])-->
+<!--                : [];-->
+<!--            const total = questions.length;-->
+<!--            const idx = q.question_index !== undefined ? q.question_index : 0;-->
+
+<!--            document.getElementById('org-q-progress').textContent = `Вопрос ${idx + 1} из ${total}`;-->
+<!--            document.getElementById('org-q-text').textContent = q.text;-->
+
+<!--            if (q.image_url) {-->
+<!--                document.getElementById('org-q-image').src = q.image_url;-->
+<!--                document.getElementById('org-q-image-wrap').style.display = 'block';-->
+<!--            } else {-->
+<!--                document.getElementById('org-q-image-wrap').style.display = 'none';-->
+<!--            }-->
+
+<!--            document.getElementById('org-answers').innerHTML = (q.answers || []).map((a, i) => `-->
+<!--      <div class="answer-preview ${a.is_correct ? 'correct-answer' : ''}">-->
+<!--        <div class="answer-letter">${letters[i]}</div>-->
+<!--        <span>${a.text}</span>-->
+<!--        ${a.is_correct ? '<span style="margin-left:auto;font-size:12px;">✓</span>' : ''}-->
+<!--      </div>-->
+<!--    `).join('');-->
+
+<!--            // показываем/скрываем кнопку "Следующий вопрос"-->
+<!--            const btnNext = document.getElementById('btn-next-q');-->
+<!--            if (btnNext) {-->
+<!--                const isLast = (idx + 1 >= total);-->
+<!--                btnNext.style.display = isLast ? 'none' : 'inline-flex';-->
+<!--            }-->
+
+<!--        } else {-->
+<!--            document.getElementById('play-waiting').style.display = 'none';-->
+<!--            document.getElementById('play-question').style.display = 'block';-->
+<!--            document.getElementById('score-result').style.display = 'none';-->
+<!--            document.getElementById('score-result').innerHTML = '';-->
+
+<!--            const idx = q.question_index !== undefined ? q.question_index : 0;-->
+<!--            document.getElementById('play-q-progress').textContent = `Вопрос ${idx + 1}`;-->
+<!--            document.getElementById('play-q-text').textContent = q.text;-->
+
+<!--            if (q.image_url) {-->
+<!--                document.getElementById('play-q-image').src = q.image_url;-->
+<!--                document.getElementById('play-q-image-wrap').style.display = 'block';-->
+<!--            } else {-->
+<!--                document.getElementById('play-q-image-wrap').style.display = 'none';-->
+<!--            }-->
+
+<!--            document.getElementById('play-answers').innerHTML = (q.answers || []).map((a, i) => `-->
+<!--      <button class="quiz-answer-btn" onclick="submitAnswer('${a.id}', this)">-->
+<!--        <div class="answer-key">${letters[i]}</div>-->
+<!--        <span>${a.text}</span>-->
+<!--      </button>-->
+<!--    `).join('');-->
+
+<!--            startTimer(q.time_limit || 30);-->
+<!--        }-->
+<!--    }-->
+
+<!--    function startTimer(seconds) {-->
+<!--        clearInterval(state.timerInterval);-->
+<!--        const fill = document.getElementById('timer-fill');-->
+<!--        const start = Date.now();-->
+<!--        fill.style.width = '100%';-->
+<!--        fill.style.background = 'linear-gradient(90deg, var(&#45;&#45;accent), var(&#45;&#45;accent3))';-->
+<!--        state.timerInterval = setInterval(() => {-->
+<!--            const pct = Math.max(0, 100 - ((Date.now() - start) / 1000 / seconds * 100));-->
+<!--            fill.style.width = pct + '%';-->
+<!--            if (pct < 30) fill.style.background = 'linear-gradient(90deg, var(&#45;&#45;red), #fbbf24)';-->
+<!--            if (pct <= 0) {-->
+<!--                clearInterval(state.timerInterval);-->
+<!--                document.querySelectorAll('.quiz-answer-btn').forEach(b => b.disabled = true);-->
+<!--            }-->
+<!--        }, 100);-->
+<!--    }-->
+
+<!--    function submitAnswer(answerId, btn) {-->
+<!--        if (!state.participantId) {-->
+<!--            toast('Нет ID участника', 'error');-->
+<!--            return;-->
+<!--        }-->
+<!--        const responseTimeMs = Date.now() - state.questionStartTime;-->
+<!--        clearInterval(state.timerInterval);-->
+<!--        document.querySelectorAll('.quiz-answer-btn').forEach(b => b.disabled = true);-->
+<!--        btn.classList.add('selected');-->
+<!--        sendWs('submit_answer', {-->
+<!--            question_id: state.currentQuestionId,-->
+<!--            answer_id: answerId,-->
+<!--            response_time_ms: responseTimeMs,-->
+<!--            participant_id: state.participantId,-->
+<!--        });-->
+<!--    }-->
+
+<!--    function showScoreResult(score) {-->
+<!--        const el = document.getElementById('score-result');-->
+<!--        el.style.display = 'block';-->
+<!--        state.myTotalScore += score;-->
+<!--        document.getElementById('my-total-score').textContent = state.myTotalScore;-->
+<!--        el.innerHTML = score > 0-->
+<!--            ? `<div class="score-popup"><div class="score-popup-value">+${score}</div><div class="score-popup-label">баллов за этот вопрос</div></div>`-->
+<!--            : `<div class="score-popup" style="background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.3);"><div class="score-popup-value" style="color:var(&#45;&#45;red);">0</div><div class="score-popup-label">Неправильно или время вышло</div></div>`;-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // SESSION CONTROLS-->
+<!--    // ══════════════════════════════════-->
+<!--    function startSession() {-->
+<!--        sendWs('start_session');-->
+<!--    }-->
+
+<!--    function nextQuestion() {-->
+<!--        sendWs('next_question');-->
+<!--    }-->
+
+<!--    function finishSession() {-->
+<!--        if (!confirm('Завершить квиз и показать результаты?')) return;-->
+<!--        sendWs('finish_session');-->
+<!--    }-->
+
+<!--    function confirmLeaveSession() {-->
+<!--        if (!confirm('Завершить сессию?')) return;-->
+<!--        sendWs('finish_session');-->
+<!--    }-->
+
+<!--    function copyRoomCode() {-->
+<!--        const code = state.currentSession?.roomCode || '';-->
+<!--        navigator.clipboard.writeText(code).then(() => toast('Код скопирован!', 'success'));-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // JOIN SESSION-->
+<!--    // ══════════════════════════════════-->
+<!--    async function doJoin() {-->
+<!--        if (!state.token) {-->
+<!--            state.returnTo = 'join';-->
+<!--            toast('Сначала войди в аккаунт', 'error');-->
+<!--            showPage('auth', 'login');-->
+<!--            return;-->
+<!--        }-->
+<!--        const roomCode = document.getElementById('join-room-code').value.trim().toUpperCase();-->
+<!--        if (roomCode.length < 4) {-->
+<!--            toast('Введи код комнаты', 'error');-->
+<!--            return;-->
+<!--        }-->
+<!--        const btn = document.getElementById('btn-join');-->
+<!--        btn.disabled = true;-->
+<!--        btn.innerHTML = '<span class="spinner"></span>';-->
+<!--        try {-->
+<!--            const data = await api('POST', '/sessions/join', {room_code: roomCode});-->
+<!--            state.participantId = data.participant_id;-->
+<!--            state.currentSession = {id: data.session_id, roomCode};-->
+<!--            state.isOrganizer = false;-->
+<!--            state.myTotalScore = 0;-->
+<!--            document.getElementById('play-room-display').textContent = `Комната: ${roomCode}`;-->
+<!--            document.getElementById('my-total-score').textContent = '0';-->
+<!--            document.getElementById('play-waiting').style.display = 'block';-->
+<!--            document.getElementById('play-question').style.display = 'none';-->
+<!--            showPage('quiz-play');-->
+<!--            connectWebSocket(false);-->
+<!--            toast('Подключился к квизу!', 'success');-->
+<!--        } catch (e) {-->
+<!--            toast(e.message, 'error');-->
+<!--        } finally {-->
+<!--            btn.disabled = false;-->
+<!--            btn.textContent = 'Войти в квиз →';-->
+<!--        }-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // LEADERBOARD-->
+<!--    // ══════════════════════════════════-->
+<!--    function showLeaderboard(participants) {-->
+<!--        clearInterval(state.timerInterval);-->
+<!--        stopParticipantPolling();-->
+<!--        if (state.ws) {-->
+<!--            state.ws.close();-->
+<!--            state.ws = null;-->
+<!--        }-->
+
+<!--        const list = document.getElementById('leaderboard-list');-->
+<!--        if (!participants || participants.length === 0) {-->
+<!--            list.innerHTML = `<div class="empty-state"><div class="empty-icon">😔</div><div class="empty-title">Нет результатов</div></div>`;-->
+<!--        } else {-->
+<!--            const rankEmojis = ['🥇', '🥈', '🥉'];-->
+<!--            list.innerHTML = participants.map((p, i) => `-->
+<!--      <div class="leaderboard-item">-->
+<!--        <div class="rank-number rank-${i + 1}">${rankEmojis[i] || (i + 1)}</div>-->
+<!--        <div class="leaderboard-name">${p.Username || p.username || p.UserID || p.user_id || 'Участник ' + (i + 1)}</div>-->
+<!--        <div class="leaderboard-score">${p.TotalScore || p.total_score || 0}</div>-->
+<!--      </div>-->
+<!--    `).join('');-->
+<!--        }-->
+<!--        showPage('leaderboard');-->
+<!--    }-->
+
+<!--    // ══════════════════════════════════-->
+<!--    // INIT-->
+<!--    // ══════════════════════════════════-->
+<!--    document.addEventListener('DOMContentLoaded', () => {-->
+<!--        state.pendingQuestions = [];-->
+<!--        if (state.token && state.user) {-->
+<!--            const saved = sessionStorage.getItem('qeasy_page') || 'dashboard';-->
+<!--            showPage(saved);-->
+<!--        }-->
+<!--    });-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
+
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -5,21 +2621,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QEasy — Квизы в реальном времени</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
-          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
             --bg: #0a0a0f;
             --bg2: #12121a;
             --bg3: #1a1a26;
-            --border: rgba(255, 255, 255, 0.08);
-            --border2: rgba(255, 255, 255, 0.15);
+            --border: rgba(255,255,255,0.08);
+            --border2: rgba(255,255,255,0.15);
             --text: #f0f0f8;
             --text2: #8888aa;
             --text3: #5555777;
@@ -33,7 +2644,7 @@
             --font-body: 'DM Sans', sans-serif;
             --radius: 16px;
             --radius-sm: 8px;
-            --shadow: 0 0 40px rgba(124, 92, 252, 0.15);
+            --shadow: 0 0 40px rgba(124,92,252,0.15);
         }
 
         body {
@@ -58,15 +2669,8 @@
         }
 
         /* ── PAGES ── */
-        .page {
-            display: none;
-            min-height: 100vh;
-        }
-
-        .page.active {
-            display: flex;
-            flex-direction: column;
-        }
+        .page { display: none; min-height: 100vh; }
+        .page.active { display: flex; flex-direction: column; }
 
         /* ── NAV ── */
         nav {
@@ -77,11 +2681,10 @@
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
-            background: rgba(10, 10, 15, 0.85);
+            background: rgba(10,10,15,0.85);
             backdrop-filter: blur(20px);
             z-index: 100;
         }
-
         .logo {
             font-family: var(--font-display);
             font-size: 24px;
@@ -91,12 +2694,7 @@
             -webkit-text-fill-color: transparent;
             cursor: pointer;
         }
-
-        .nav-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
+        .nav-actions { display: flex; gap: 12px; align-items: center; }
 
         /* ── BUTTONS ── */
         .btn {
@@ -113,81 +2711,28 @@
             transition: all 0.2s;
             text-decoration: none;
         }
-
         .btn-primary {
             background: var(--accent);
             color: white;
         }
-
-        .btn-primary:hover {
-            background: #6d4ee6;
-            transform: translateY(-1px);
-            box-shadow: 0 8px 24px rgba(124, 92, 252, 0.4);
-        }
-
+        .btn-primary:hover { background: #6d4ee6; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,92,252,0.4); }
         .btn-secondary {
             background: var(--bg3);
             color: var(--text2);
             border: 1px solid var(--border);
         }
-
-        .btn-secondary:hover {
-            border-color: var(--border2);
-            color: var(--text);
-        }
-
-        .btn-ghost {
-            background: transparent;
-            color: var(--text2);
-        }
-
-        .btn-ghost:hover {
-            color: var(--text);
-            background: var(--bg3);
-        }
-
-        .btn-danger {
-            background: rgba(248, 113, 113, 0.15);
-            color: var(--red);
-            border: 1px solid rgba(248, 113, 113, 0.3);
-        }
-
-        .btn-danger:hover {
-            background: rgba(248, 113, 113, 0.25);
-        }
-
-        .btn-lg {
-            padding: 16px 32px;
-            font-size: 17px;
-            border-radius: var(--radius);
-        }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 13px;
-        }
-
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none !important;
-        }
+        .btn-secondary:hover { border-color: var(--border2); color: var(--text); }
+        .btn-ghost { background: transparent; color: var(--text2); }
+        .btn-ghost:hover { color: var(--text); background: var(--bg3); }
+        .btn-danger { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+        .btn-danger:hover { background: rgba(248,113,113,0.25); }
+        .btn-lg { padding: 16px 32px; font-size: 17px; border-radius: var(--radius); }
+        .btn-sm { padding: 8px 16px; font-size: 13px; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
 
         /* ── INPUTS ── */
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .input-label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text2);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-label { font-size: 13px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
         input, textarea, select {
             background: var(--bg3);
             border: 1px solid var(--border);
@@ -200,19 +2745,9 @@
             transition: border-color 0.2s;
             outline: none;
         }
-
-        input:focus, textarea:focus, select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.15);
-        }
-
-        input::placeholder, textarea::placeholder {
-            color: var(--text3);
-        }
-
-        select option {
-            background: var(--bg2);
-        }
+        input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,252,0.15); }
+        input::placeholder, textarea::placeholder { color: var(--text3); }
+        select option { background: var(--bg2); }
 
         /* ── CARDS ── */
         .card {
@@ -221,10 +2756,7 @@
             border-radius: var(--radius);
             padding: 24px;
         }
-
-        .card:hover {
-            border-color: var(--border2);
-        }
+        .card:hover { border-color: var(--border2); }
 
         /* ── TOAST ── */
         #toast-container {
@@ -236,7 +2768,6 @@
             flex-direction: column;
             gap: 8px;
         }
-
         .toast {
             padding: 14px 20px;
             border-radius: var(--radius-sm);
@@ -245,52 +2776,23 @@
             animation: slideIn 0.3s ease;
             max-width: 320px;
         }
-
-        .toast-success {
-            background: rgba(52, 211, 153, 0.15);
-            border: 1px solid rgba(52, 211, 153, 0.3);
-            color: var(--green);
-        }
-
-        .toast-error {
-            background: rgba(248, 113, 113, 0.15);
-            border: 1px solid rgba(248, 113, 113, 0.3);
-            color: var(--red);
-        }
-
-        .toast-info {
-            background: rgba(124, 92, 252, 0.15);
-            border: 1px solid rgba(124, 92, 252, 0.3);
-            color: var(--accent3);
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
+        .toast-success { background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.3); color: var(--green); }
+        .toast-error { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
+        .toast-info { background: rgba(124,92,252,0.15); border: 1px solid rgba(124,92,252,0.3); color: var(--accent3); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
         /* ── MODAL ── */
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0,0,0,0.7);
             backdrop-filter: blur(8px);
             z-index: 500;
             align-items: center;
             justify-content: center;
         }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
+        .modal-overlay.active { display: flex; }
         .modal {
             background: var(--bg2);
             border: 1px solid var(--border2);
@@ -300,24 +2802,8 @@
             max-width: 500px;
             animation: modalIn 0.25s ease;
         }
-
-        @keyframes modalIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .modal-title {
-            font-family: var(--font-display);
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 24px;
-        }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin-bottom: 24px; }
 
         /* ── BADGE ── */
         .badge {
@@ -328,50 +2814,24 @@
             font-size: 12px;
             font-weight: 500;
         }
-
-        .badge-draft {
-            background: rgba(136, 136, 170, 0.15);
-            color: var(--text2);
-        }
-
-        .badge-published {
-            background: rgba(52, 211, 153, 0.15);
-            color: var(--green);
-        }
-
-        .badge-active {
-            background: rgba(124, 92, 252, 0.2);
-            color: var(--accent3);
-        }
-
-        .badge-finished {
-            background: rgba(136, 136, 170, 0.1);
-            color: var(--text3);
-        }
+        .badge-draft { background: rgba(136,136,170,0.15); color: var(--text2); }
+        .badge-published { background: rgba(52,211,153,0.15); color: var(--green); }
+        .badge-active { background: rgba(124,92,252,0.2); color: var(--accent3); }
+        .badge-finished { background: rgba(136,136,170,0.1); color: var(--text3); }
 
         /* ── LOADER ── */
         .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
             border-top-color: var(--accent);
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
             display: inline-block;
         }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* ── DIVIDER ── */
-        .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 24px 0;
-        }
+        .divider { height: 1px; background: var(--border); margin: 24px 0; }
 
         /* ══════════════════════════════════
            PAGE: HOME
@@ -382,18 +2842,14 @@
             position: relative;
             overflow: hidden;
         }
-
         .hero-glow {
             position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(124, 92, 252, 0.2) 0%, transparent 70%);
-            top: 50%;
-            left: 50%;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(124,92,252,0.2) 0%, transparent 70%);
+            top: 50%; left: 50%;
             transform: translate(-50%, -60%);
             pointer-events: none;
         }
-
         .hero {
             text-align: center;
             padding: 80px 40px;
@@ -401,38 +2857,21 @@
             z-index: 1;
             max-width: 700px;
         }
-
         .hero-tag {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
             border-radius: 100px;
-            border: 1px solid rgba(124, 92, 252, 0.3);
-            background: rgba(124, 92, 252, 0.1);
+            border: 1px solid rgba(124,92,252,0.3);
+            background: rgba(124,92,252,0.1);
             color: var(--accent3);
             font-size: 13px;
             font-weight: 500;
             margin-bottom: 32px;
         }
-
-        .hero-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.4;
-            }
-        }
-
+        .hero-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
         .hero h1 {
             font-family: var(--font-display);
             font-size: clamp(48px, 8vw, 80px);
@@ -441,28 +2880,13 @@
             margin-bottom: 24px;
             letter-spacing: -0.02em;
         }
-
         .hero h1 span {
             background: linear-gradient(135deg, var(--accent2), var(--accent3));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
-        .hero p {
-            font-size: 18px;
-            color: var(--text2);
-            margin-bottom: 48px;
-            max-width: 480px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+        .hero p { font-size: 18px; color: var(--text2); margin-bottom: 48px; max-width: 480px; margin-left: auto; margin-right: auto; }
+        .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 
         /* ══════════════════════════════════
            PAGE: AUTH
@@ -472,61 +2896,28 @@
             justify-content: center;
             min-height: 100vh;
         }
-
         .auth-box {
             width: 100%;
             max-width: 440px;
             padding: 40px;
         }
-
         .auth-title {
             font-family: var(--font-display);
             font-size: 32px;
             font-weight: 700;
             margin-bottom: 8px;
         }
-
-        .auth-subtitle {
-            color: var(--text2);
-            margin-bottom: 32px;
-        }
-
-        .auth-form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .auth-switch {
-            text-align: center;
-            margin-top: 24px;
-            color: var(--text2);
-            font-size: 14px;
-        }
-
-        .auth-switch a {
-            color: var(--accent3);
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .auth-switch a:hover {
-            text-decoration: underline;
-        }
+        .auth-subtitle { color: var(--text2); margin-bottom: 32px; }
+        .auth-form { display: flex; flex-direction: column; gap: 20px; }
+        .auth-switch { text-align: center; margin-top: 24px; color: var(--text2); font-size: 14px; }
+        .auth-switch a { color: var(--accent3); cursor: pointer; text-decoration: none; }
+        .auth-switch a:hover { text-decoration: underline; }
 
         /* ══════════════════════════════════
            PAGE: DASHBOARD
         ══════════════════════════════════ */
-        #page-dashboard {
-            padding: 0;
-        }
-
-        .dashboard-layout {
-            display: grid;
-            grid-template-columns: 260px 1fr;
-            min-height: calc(100vh - 65px);
-        }
-
+        #page-dashboard { padding: 0; }
+        .dashboard-layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 65px); }
         .sidebar {
             border-right: 1px solid var(--border);
             padding: 32px 20px;
@@ -534,17 +2925,7 @@
             flex-direction: column;
             gap: 4px;
         }
-
-        .sidebar-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text3);
-            padding: 0 12px;
-            margin: 16px 0 8px;
-            font-weight: 600;
-        }
-
+        .sidebar-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); padding: 0 12px; margin: 16px 0 8px; font-weight: 600; }
         .sidebar-item {
             display: flex;
             align-items: center;
@@ -558,64 +2939,20 @@
             transition: all 0.15s;
             border: 1px solid transparent;
         }
-
-        .sidebar-item:hover {
-            background: var(--bg3);
-            color: var(--text);
-        }
-
-        .sidebar-item.active {
-            background: rgba(124, 92, 252, 0.15);
-            color: var(--accent3);
-            border-color: rgba(124, 92, 252, 0.2);
-        }
-
-        .sidebar-icon {
-            font-size: 18px;
-            width: 20px;
-            text-align: center;
-        }
-
-        .main-content {
-            padding: 40px;
-            overflow-y: auto;
-        }
-
-        .content-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 32px;
-        }
-
-        .content-title {
-            font-family: var(--font-display);
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .content-subtitle {
-            color: var(--text2);
-            font-size: 14px;
-            margin-top: 4px;
-        }
+        .sidebar-item:hover { background: var(--bg3); color: var(--text); }
+        .sidebar-item.active { background: rgba(124,92,252,0.15); color: var(--accent3); border-color: rgba(124,92,252,0.2); }
+        .sidebar-icon { font-size: 18px; width: 20px; text-align: center; }
+        .main-content { padding: 40px; overflow-y: auto; }
+        .content-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+        .content-title { font-family: var(--font-display); font-size: 28px; font-weight: 700; }
+        .content-subtitle { color: var(--text2); font-size: 14px; margin-top: 4px; }
 
         /* Tab content */
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
         /* Quiz grid */
-        .quiz-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
+        .quiz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .quiz-card {
             background: var(--bg2);
             border: 1px solid var(--border);
@@ -626,53 +2963,21 @@
             position: relative;
             overflow: hidden;
         }
-
         .quiz-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             height: 3px;
             background: linear-gradient(90deg, var(--accent), var(--accent3));
             opacity: 0;
             transition: opacity 0.2s;
         }
-
-        .quiz-card:hover {
-            border-color: var(--border2);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow);
-        }
-
-        .quiz-card:hover::before {
-            opacity: 1;
-        }
-
-        .quiz-card-title {
-            font-family: var(--font-display);
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .quiz-card-meta {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        .quiz-card-stat {
-            font-size: 13px;
-            color: var(--text2);
-        }
-
-        .quiz-card-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-        }
+        .quiz-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: var(--shadow); }
+        .quiz-card:hover::before { opacity: 1; }
+        .quiz-card-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .quiz-card-meta { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+        .quiz-card-stat { font-size: 13px; color: var(--text2); }
+        .quiz-card-actions { display: flex; gap: 8px; margin-top: 16px; }
 
         /* Empty state */
         .empty-state {
@@ -680,47 +2985,16 @@
             padding: 80px 40px;
             color: var(--text2);
         }
-
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        .empty-title {
-            font-family: var(--font-display);
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 8px;
-        }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
 
         /* ══════════════════════════════════
            PAGE: CREATE QUIZ
         ══════════════════════════════════ */
-        .create-layout {
-            max-width: 800px;
-        }
-
-        .section-title {
-            font-family: var(--font-display);
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .questions-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
+        .create-layout { max-width: 800px; }
+        .section-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .questions-list { display: flex; flex-direction: column; gap: 16px; }
         .question-item {
             background: var(--bg3);
             border: 1px solid var(--border);
@@ -728,7 +3002,6 @@
             padding: 20px;
             position: relative;
         }
-
         .question-number {
             font-family: var(--font-display);
             font-size: 12px;
@@ -738,14 +3011,7 @@
             letter-spacing: 0.05em;
             margin-bottom: 12px;
         }
-
-        .answers-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 12px;
-        }
-
+        .answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
         .answer-input-row {
             display: flex;
             align-items: center;
@@ -756,26 +3022,16 @@
             padding: 8px 12px;
             transition: border-color 0.2s;
         }
-
-        .answer-input-row.correct {
-            border-color: rgba(52, 211, 153, 0.4);
-            background: rgba(52, 211, 153, 0.05);
-        }
-
+        .answer-input-row.correct { border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.05); }
         .answer-input-row input {
             background: transparent;
             border: none;
             padding: 4px 0;
             flex: 1;
         }
-
-        .answer-input-row input:focus {
-            box-shadow: none;
-        }
-
+        .answer-input-row input:focus { box-shadow: none; }
         .correct-toggle {
-            width: 20px;
-            height: 20px;
+            width: 20px; height: 20px;
             border-radius: 50%;
             border: 2px solid var(--border2);
             cursor: pointer;
@@ -787,11 +3043,7 @@
             justify-content: center;
             font-size: 11px;
         }
-
-        .correct-toggle.active {
-            background: var(--green);
-            border-color: var(--green);
-        }
+        .correct-toggle.active { background: var(--green); border-color: var(--green); }
 
         /* ══════════════════════════════════
            PAGE: SESSION (ORGANIZER)
@@ -805,35 +3057,16 @@
             margin: 0 auto;
             width: 100%;
         }
-
-        .session-main {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .session-sidebar-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
+        .session-main { display: flex; flex-direction: column; gap: 24px; }
+        .session-sidebar-panel { display: flex; flex-direction: column; gap: 16px; }
         .room-code-display {
-            background: linear-gradient(135deg, rgba(124, 92, 252, 0.2), rgba(167, 139, 250, 0.1));
-            border: 1px solid rgba(124, 92, 252, 0.3);
+            background: linear-gradient(135deg, rgba(124,92,252,0.2), rgba(167,139,250,0.1));
+            border: 1px solid rgba(124,92,252,0.3);
             border-radius: var(--radius);
             padding: 28px 16px;
             text-align: center;
         }
-
-        .room-code-label {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text2);
-            margin-bottom: 8px;
-        }
-
+        .room-code-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text2); margin-bottom: 8px; }
         .room-code-value {
             font-family: var(--font-display);
             font-size: clamp(28px, 5vw, 42px);
@@ -844,15 +3077,7 @@
             -webkit-text-fill-color: transparent;
             word-break: break-all;
         }
-
-        .participants-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
+        .participants-list { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
         .participant-item {
             display: flex;
             align-items: center;
@@ -862,30 +3087,15 @@
             border-radius: var(--radius-sm);
             font-size: 14px;
         }
-
-        .participant-name {
-            font-weight: 500;
-        }
-
-        .participant-score {
-            color: var(--accent3);
-            font-family: var(--font-display);
-            font-weight: 600;
-        }
-
+        .participant-name { font-weight: 500; }
+        .participant-score { color: var(--accent3); font-family: var(--font-display); font-weight: 600; }
         .current-question-card {
             background: var(--bg2);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 32px;
         }
-
-        .question-progress {
-            font-size: 13px;
-            color: var(--text2);
-            margin-bottom: 16px;
-        }
-
+        .question-progress { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
         .question-text {
             font-family: var(--font-display);
             font-size: 24px;
@@ -893,13 +3103,7 @@
             margin-bottom: 24px;
             line-height: 1.3;
         }
-
-        .answers-preview {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
+        .answers-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .answer-preview {
             padding: 14px 18px;
             background: var(--bg3);
@@ -910,16 +3114,9 @@
             align-items: center;
             gap: 10px;
         }
-
-        .answer-preview.correct-answer {
-            border-color: rgba(52, 211, 153, 0.4);
-            background: rgba(52, 211, 153, 0.08);
-            color: var(--green);
-        }
-
+        .answer-preview.correct-answer { border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.08); color: var(--green); }
         .answer-letter {
-            width: 28px;
-            height: 28px;
+            width: 28px; height: 28px;
             border-radius: 6px;
             background: var(--bg2);
             display: flex;
@@ -930,12 +3127,7 @@
             font-weight: 700;
             flex-shrink: 0;
         }
-
-        .session-controls {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+        .session-controls { display: flex; gap: 12px; flex-wrap: wrap; }
 
         /* ══════════════════════════════════
            PAGE: JOIN SESSION (PARTICIPANT)
@@ -948,23 +3140,9 @@
             flex: 1;
             padding: 40px;
         }
-
-        .join-box {
-            width: 100%;
-            max-width: 480px;
-        }
-
-        .join-title {
-            font-family: var(--font-display);
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .join-subtitle {
-            color: var(--text2);
-            margin-bottom: 32px;
-        }
+        .join-box { width: 100%; max-width: 480px; }
+        .join-title { font-family: var(--font-display); font-size: 36px; font-weight: 700; margin-bottom: 8px; }
+        .join-subtitle { color: var(--text2); margin-bottom: 32px; }
 
         /* ══════════════════════════════════
            PAGE: QUIZ (PARTICIPANT VIEW)
@@ -977,12 +3155,7 @@
             flex: 1;
             padding: 40px;
         }
-
-        .quiz-play-box {
-            width: 100%;
-            max-width: 680px;
-        }
-
+        .quiz-play-box { width: 100%; max-width: 680px; }
         .quiz-timer-bar {
             height: 4px;
             background: var(--bg3);
@@ -990,14 +3163,12 @@
             margin-bottom: 32px;
             overflow: hidden;
         }
-
         .quiz-timer-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--accent), var(--accent3));
             border-radius: 100px;
             transition: width 1s linear;
         }
-
         .quiz-question-text {
             font-family: var(--font-display);
             font-size: 28px;
@@ -1005,13 +3176,7 @@
             margin-bottom: 32px;
             line-height: 1.3;
         }
-
-        .quiz-answers {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
+        .quiz-answers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .quiz-answer-btn {
             padding: 20px 24px;
             background: var(--bg2);
@@ -1027,37 +3192,13 @@
             align-items: center;
             gap: 14px;
         }
-
-        .quiz-answer-btn:hover:not(:disabled) {
-            border-color: var(--accent);
-            background: rgba(124, 92, 252, 0.1);
-            transform: translateY(-1px);
-        }
-
-        .quiz-answer-btn.selected {
-            border-color: var(--accent);
-            background: rgba(124, 92, 252, 0.15);
-        }
-
-        .quiz-answer-btn.correct {
-            border-color: var(--green);
-            background: rgba(52, 211, 153, 0.15);
-            color: var(--green);
-        }
-
-        .quiz-answer-btn.wrong {
-            border-color: var(--red);
-            background: rgba(248, 113, 113, 0.1);
-            color: var(--red);
-        }
-
-        .quiz-answer-btn:disabled {
-            cursor: not-allowed;
-        }
-
+        .quiz-answer-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(124,92,252,0.1); transform: translateY(-1px); }
+        .quiz-answer-btn.selected { border-color: var(--accent); background: rgba(124,92,252,0.15); }
+        .quiz-answer-btn.correct { border-color: var(--green); background: rgba(52,211,153,0.15); color: var(--green); }
+        .quiz-answer-btn.wrong { border-color: var(--red); background: rgba(248,113,113,0.1); color: var(--red); }
+        .quiz-answer-btn:disabled { cursor: not-allowed; }
         .answer-key {
-            width: 36px;
-            height: 36px;
+            width: 36px; height: 36px;
             border-radius: 8px;
             background: var(--bg3);
             display: flex;
@@ -1068,78 +3209,37 @@
             font-size: 14px;
             flex-shrink: 0;
         }
-
         .score-popup {
             text-align: center;
             padding: 24px;
-            background: rgba(52, 211, 153, 0.1);
-            border: 1px solid rgba(52, 211, 153, 0.3);
+            background: rgba(52,211,153,0.1);
+            border: 1px solid rgba(52,211,153,0.3);
             border-radius: var(--radius);
             margin-top: 24px;
-            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
         }
-
-        @keyframes popIn {
-            from {
-                opacity: 0;
-                transform: scale(0.8);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .score-popup-value {
-            font-family: var(--font-display);
-            font-size: 48px;
-            font-weight: 800;
-            color: var(--green);
-        }
-
-        .score-popup-label {
-            color: var(--text2);
-            font-size: 14px;
-        }
-
+        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        .score-popup-value { font-family: var(--font-display); font-size: 48px; font-weight: 800; color: var(--green); }
+        .score-popup-label { color: var(--text2); font-size: 14px; }
         .waiting-screen {
             text-align: center;
             padding: 60px 40px;
         }
-
         .waiting-animation {
             display: flex;
             gap: 8px;
             justify-content: center;
             margin-bottom: 24px;
         }
-
         .waiting-dot {
-            width: 10px;
-            height: 10px;
+            width: 10px; height: 10px;
             background: var(--accent);
             border-radius: 50%;
             animation: bounce 1.2s infinite;
         }
-
-        .waiting-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .waiting-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-                opacity: 0.4;
-            }
-            50% {
-                transform: translateY(-12px);
-                opacity: 1;
-            }
-        }
+        .waiting-dot:nth-child(2) { animation-delay: 0.2s; }
+        .waiting-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%,100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(-12px); opacity: 1; } }
 
         /* ══════════════════════════════════
            PAGE: LEADERBOARD
@@ -1151,7 +3251,6 @@
             padding: 60px 40px;
             flex: 1;
         }
-
         .leaderboard-title {
             font-family: var(--font-display);
             font-size: 48px;
@@ -1159,20 +3258,8 @@
             margin-bottom: 8px;
             text-align: center;
         }
-
-        .leaderboard-subtitle {
-            color: var(--text2);
-            margin-bottom: 48px;
-        }
-
-        .leaderboard-list {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
+        .leaderboard-subtitle { color: var(--text2); margin-bottom: 48px; }
+        .leaderboard-list { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 12px; }
         .leaderboard-item {
             display: flex;
             align-items: center;
@@ -1183,32 +3270,10 @@
             border-radius: var(--radius);
             animation: fadeUp 0.4s ease both;
         }
-
-        .leaderboard-item:nth-child(1) {
-            border-color: rgba(251, 191, 36, 0.3);
-            background: rgba(251, 191, 36, 0.05);
-            animation-delay: 0.1s;
-        }
-
-        .leaderboard-item:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .leaderboard-item:nth-child(3) {
-            animation-delay: 0.3s;
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
+        .leaderboard-item:nth-child(1) { border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.05); animation-delay: 0.1s; }
+        .leaderboard-item:nth-child(2) { animation-delay: 0.2s; }
+        .leaderboard-item:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .rank-number {
             font-family: var(--font-display);
             font-size: 24px;
@@ -1216,25 +3281,10 @@
             width: 40px;
             text-align: center;
         }
-
-        .rank-1 {
-            color: var(--yellow);
-        }
-
-        .rank-2 {
-            color: #94a3b8;
-        }
-
-        .rank-3 {
-            color: #cd7f32;
-        }
-
-        .leaderboard-name {
-            flex: 1;
-            font-size: 18px;
-            font-weight: 500;
-        }
-
+        .rank-1 { color: var(--yellow); }
+        .rank-2 { color: #94a3b8; }
+        .rank-3 { color: #cd7f32; }
+        .leaderboard-name { flex: 1; font-size: 18px; font-weight: 500; }
         .leaderboard-score {
             font-family: var(--font-display);
             font-size: 22px;
@@ -1243,103 +3293,69 @@
         }
 
         /* ── MISC ── */
-        .flex {
-            display: flex;
-        }
-
-        .flex-col {
-            flex-direction: column;
-        }
-
-        .gap-8 {
-            gap: 8px;
-        }
-
-        .gap-12 {
-            gap: 12px;
-        }
-
-        .gap-16 {
-            gap: 16px;
-        }
-
-        .gap-20 {
-            gap: 20px;
-        }
-
-        .items-center {
-            align-items: center;
-        }
-
-        .justify-between {
-            justify-content: space-between;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .text-sm {
-            font-size: 13px;
-        }
-
-        .text-muted {
-            color: var(--text2);
-        }
-
-        .mt-8 {
-            margin-top: 8px;
-        }
-
-        .mt-16 {
-            margin-top: 16px;
-        }
-
-        .mt-24 {
-            margin-top: 24px;
-        }
-
-        .w-full {
-            width: 100%;
-        }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .gap-8 { gap: 8px; }
+        .gap-12 { gap: 12px; }
+        .gap-16 { gap: 16px; }
+        .gap-20 { gap: 20px; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .text-center { text-align: center; }
+        .text-sm { font-size: 13px; }
+        .text-muted { color: var(--text2); }
+        .mt-8 { margin-top: 8px; }
+        .mt-16 { margin-top: 16px; }
+        .mt-24 { margin-top: 24px; }
+        .w-full { width: 100%; }
 
         @media (max-width: 768px) {
-            nav {
-                padding: 16px 20px;
-            }
+            nav { padding: 16px 20px; }
+            nav .btn-ghost, nav .btn-secondary, nav .btn-primary { font-size: 13px; padding: 8px 12px; }
+            .dashboard-layout { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .main-content { padding: 20px 16px 80px; }
+            .form-row { grid-template-columns: 1fr; }
+            .answers-grid { grid-template-columns: 1fr; }
+            .quiz-answers { grid-template-columns: 1fr; }
+            .session-layout { grid-template-columns: 1fr; padding: 16px; }
+            .answers-preview { grid-template-columns: 1fr; }
+            .hero { padding: 40px 20px; }
+            .hero-actions { flex-direction: column; align-items: center; }
+        }
 
-            .dashboard-layout {
-                grid-template-columns: 1fr;
+        /* ── MOBILE BOTTOM NAV ── */
+        .mobile-nav {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-nav {
+                display: flex;
+                position: fixed;
+                bottom: 0; left: 0; right: 0;
+                background: rgba(10,10,15,0.95);
+                backdrop-filter: blur(20px);
+                border-top: 1px solid var(--border);
+                z-index: 200;
+                padding: 8px 0 max(8px, env(safe-area-inset-bottom));
             }
-
-            .sidebar {
-                display: none;
+            .mobile-nav-item {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                padding: 8px 4px;
+                cursor: pointer;
+                color: var(--text2);
+                font-size: 11px;
+                font-weight: 500;
+                border: none;
+                background: transparent;
+                transition: color 0.15s;
             }
-
-            .main-content {
-                padding: 20px;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .answers-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .quiz-answers {
-                grid-template-columns: 1fr;
-            }
-
-            .session-layout {
-                grid-template-columns: 1fr;
-                padding: 20px;
-            }
-
-            .answers-preview {
-                grid-template-columns: 1fr;
-            }
+            .mobile-nav-item:hover, .mobile-nav-item.active { color: var(--accent3); }
+            .mobile-nav-icon { font-size: 20px; }
         }
     </style>
 </head>
@@ -1376,29 +3392,23 @@
                 </div>
             </div>
             <div>
-                <div class="input-label" style="margin-bottom:10px;">Варианты ответов (нажми ● чтобы отметить
-                    правильный)
-                </div>
+                <div class="input-label" style="margin-bottom:10px;">Варианты ответов (нажми ● чтобы отметить правильный)</div>
                 <div style="display:flex;flex-direction:column;gap:8px;" id="answers-inputs">
                     <div class="answer-input-row" data-idx="0">
-                        <button class="correct-toggle" onclick="toggleCorrect(this, 0)"
-                                title="Отметить правильным"></button>
-                        <input placeholder="Вариант A"/>
+                        <button class="correct-toggle" onclick="toggleCorrect(this, 0)" title="Отметить правильным"></button>
+                        <input placeholder="Вариант A" />
                     </div>
                     <div class="answer-input-row" data-idx="1">
-                        <button class="correct-toggle" onclick="toggleCorrect(this, 1)"
-                                title="Отметить правильным"></button>
-                        <input placeholder="Вариант B"/>
+                        <button class="correct-toggle" onclick="toggleCorrect(this, 1)" title="Отметить правильным"></button>
+                        <input placeholder="Вариант B" />
                     </div>
                     <div class="answer-input-row" data-idx="2">
-                        <button class="correct-toggle" onclick="toggleCorrect(this, 2)"
-                                title="Отметить правильным"></button>
-                        <input placeholder="Вариант C"/>
+                        <button class="correct-toggle" onclick="toggleCorrect(this, 2)" title="Отметить правильным"></button>
+                        <input placeholder="Вариант C" />
                     </div>
                     <div class="answer-input-row" data-idx="3">
-                        <button class="correct-toggle" onclick="toggleCorrect(this, 3)"
-                                title="Отметить правильным"></button>
-                        <input placeholder="Вариант D"/>
+                        <button class="correct-toggle" onclick="toggleCorrect(this, 3)" title="Отметить правильным"></button>
+                        <input placeholder="Вариант D" />
                     </div>
                 </div>
             </div>
@@ -1455,13 +3465,11 @@
                     </div>
                     <div class="input-group">
                         <label class="input-label">Пароль</label>
-                        <input type="password" id="login-password" placeholder="••••••••"
-                               onkeydown="if(event.key==='Enter')doLogin()">
+                        <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
                     </div>
                     <button class="btn btn-primary btn-lg w-full" onclick="doLogin()" id="btn-login">Войти</button>
                 </div>
-                <div class="auth-switch">Нет аккаунта? <a onclick="showAuthForm('register')">Зарегистрироваться</a>
-                </div>
+                <div class="auth-switch">Нет аккаунта? <a onclick="showAuthForm('register')">Зарегистрироваться</a></div>
             </div>
 
             <!-- REGISTER -->
@@ -1479,12 +3487,9 @@
                     </div>
                     <div class="input-group">
                         <label class="input-label">Пароль</label>
-                        <input type="password" id="reg-password" placeholder="минимум 6 символов"
-                               onkeydown="if(event.key==='Enter')doRegister()">
+                        <input type="password" id="reg-password" placeholder="минимум 6 символов" onkeydown="if(event.key==='Enter')doRegister()">
                     </div>
-                    <button class="btn btn-primary btn-lg w-full" onclick="doRegister()" id="btn-register">Создать
-                        аккаунт
-                    </button>
+                    <button class="btn btn-primary btn-lg w-full" onclick="doRegister()" id="btn-register">Создать аккаунт</button>
                 </div>
                 <div class="auth-switch">Уже есть аккаунт? <a onclick="showAuthForm('login')">Войти</a></div>
             </div>
@@ -1558,6 +3563,22 @@
 
         </div>
     </div>
+
+    <!-- Mobile bottom nav -->
+    <div class="mobile-nav" id="mobile-nav-dashboard">
+        <button class="mobile-nav-item active" onclick="switchTab('quizzes');setMobileNav(0)">
+            <span class="mobile-nav-icon">📋</span>Квизы
+        </button>
+        <button class="mobile-nav-item" onclick="showPage('create-quiz');setMobileNav(1)">
+            <span class="mobile-nav-icon">✨</span>Создать
+        </button>
+        <button class="mobile-nav-item" onclick="showPage('join');setMobileNav(2)">
+            <span class="mobile-nav-icon">🔗</span>Войти
+        </button>
+        <button class="mobile-nav-item" onclick="switchTab('sessions');setMobileNav(3)">
+            <span class="mobile-nav-icon">🎮</span>Сессии
+        </button>
+    </div>
 </div>
 
 <!-- ══════════════════════════════════
@@ -1601,9 +3622,7 @@
 
             <div class="card" style="margin-bottom:24px;">
                 <div class="flex justify-between items-center" style="margin-bottom:20px;">
-                    <div class="section-title" style="margin:0;">Вопросы <span id="questions-count"
-                                                                               style="color:var(--accent3);font-size:14px;">(0)</span>
-                    </div>
+                    <div class="section-title" style="margin:0;">Вопросы <span id="questions-count" style="color:var(--accent3);font-size:14px;">(0)</span></div>
                     <button class="btn btn-secondary btn-sm" onclick="openAddQuestion()">+ Добавить вопрос</button>
                 </div>
                 <div class="questions-list" id="questions-list">
@@ -1654,8 +3673,7 @@
                 <div class="question-progress" id="org-q-progress">Вопрос 1 из 5</div>
                 <div class="question-text" id="org-q-text">Текст вопроса</div>
                 <div id="org-q-image-wrap" style="display:none;margin-bottom:20px;">
-                    <img id="org-q-image" src=""
-                         style="max-width:100%;border-radius:12px;max-height:200px;object-fit:cover;">
+                    <img id="org-q-image" src="" style="max-width:100%;border-radius:12px;max-height:200px;object-fit:cover;">
                 </div>
                 <div class="answers-preview" id="org-answers"></div>
                 <div class="session-controls mt-24">
@@ -1700,15 +3718,10 @@
             <div style="display:flex;flex-direction:column;gap:16px;">
                 <div class="input-group">
                     <label class="input-label">Код комнаты</label>
-                    <input type="text" id="join-room-code" placeholder="XXXXXX"
-                           style="font-family:var(--font-display);font-size:28px;letter-spacing:0.1em;text-transform:uppercase;text-align:center;"
-                           maxlength="6" oninput="this.value=this.value.toUpperCase()"
-                           onkeydown="if(event.key==='Enter')doJoin()">
+                    <input type="text" id="join-room-code" placeholder="XXXXXX" style="font-family:var(--font-display);font-size:28px;letter-spacing:0.1em;text-transform:uppercase;text-align:center;" maxlength="6" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')doJoin()">
                 </div>
                 <button class="btn btn-primary btn-lg w-full" onclick="doJoin()" id="btn-join">Войти в квиз →</button>
-                <button class="btn btn-ghost btn-sm w-full" onclick="showPage('dashboard')" id="btn-to-dashboard"
-                        style="display:none;">← Мои квизы
-                </button>
+                <button class="btn btn-ghost btn-sm w-full" onclick="showPage('dashboard')" id="btn-to-dashboard" style="display:none;">← Мои квизы</button>
             </div>
         </div>
     </div>
@@ -1723,8 +3736,7 @@
         <div class="nav-actions">
             <div class="flex items-center gap-12">
                 <span class="text-muted text-sm">Мои баллы:</span>
-                <span style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--accent3);"
-                      id="my-total-score">0</span>
+                <span style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--accent3);" id="my-total-score">0</span>
             </div>
         </div>
     </nav>
@@ -1756,8 +3768,7 @@
                 <div class="question-progress text-muted text-sm" id="play-q-progress">Вопрос 1</div>
                 <div class="quiz-question-text" id="play-q-text">Вопрос</div>
                 <div id="play-q-image-wrap" style="display:none;margin-bottom:20px;">
-                    <img id="play-q-image" src=""
-                         style="max-width:100%;border-radius:12px;max-height:200px;object-fit:cover;">
+                    <img id="play-q-image" src="" style="max-width:100%;border-radius:12px;max-height:200px;object-fit:cover;">
                 </div>
                 <div class="quiz-answers" id="play-answers"></div>
                 <div id="score-result" style="display:none;"></div>
@@ -1787,6 +3798,7 @@
         </div>
     </div>
 </div>
+
 
 
 <script>
@@ -1828,16 +3840,13 @@
         if (el) el.classList.add('active');
 
         // сохраняем страницу — session/quiz-play нельзя восстановить без WS
-        if (!['session', 'quiz-play', 'home'].includes(page)) {
+        if (!['session', 'quiz-play', 'home', 'leaderboard'].includes(page)) {
             sessionStorage.setItem('qeasy_page', page);
             sessionStorage.setItem('qeasy_sub', sub || '');
         }
 
         if (page === 'auth') showAuthForm(sub || 'login');
-        if (page === 'dashboard') {
-            updateNavUser();
-            loadQuizzes();
-        }
+        if (page === 'dashboard') { updateNavUser(); loadQuizzes(); }
         if (page === 'join') {
             const btnD = document.getElementById('btn-to-dashboard');
             if (btnD) btnD.style.display = state.token ? 'block' : 'none';
@@ -1852,17 +3861,14 @@
             // сброс формы при новом квизе
             if (!state.editingQuizId) resetCreateForm();
         }
-        if (page === 'home' && state.token) {
-            showPage('dashboard');
-            return;
-        }
+        if (page === 'home' && state.token) { showPage('dashboard'); return; }
     }
 
     // ══════════════════════════════════
     // API
     // ══════════════════════════════════
     async function api(method, path, body) {
-        const opts = {method, headers: {'Content-Type': 'application/json'}};
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
         if (state.token) opts.headers['Authorization'] = 'Bearer ' + state.token;
         if (body) opts.body = JSON.stringify(body);
         const res = await fetch(API + path, opts);
@@ -1885,13 +3891,8 @@
     // ══════════════════════════════════
     // MODAL
     // ══════════════════════════════════
-    function openModal(id) {
-        document.getElementById(id).classList.add('active');
-    }
-
-    function closeModal(id) {
-        document.getElementById(id).classList.remove('active');
-    }
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
     // ══════════════════════════════════
     // AUTH
@@ -1909,72 +3910,49 @@
     async function doLogin() {
         const email = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
-        if (!email || !password) {
-            toast('Заполни все поля', 'error');
-            return;
-        }
+        if (!email || !password) { toast('Заполни все поля', 'error'); return; }
         const btn = document.getElementById('btn-login');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span>';
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
         try {
-            const data = await api('POST', '/login', {email, password});
+            const data = await api('POST', '/login', { email, password });
             state.token = data.token;
             localStorage.setItem('token', data.token);
             const profile = await api('GET', '/profile');
             state.user = profile;
             localStorage.setItem('user', JSON.stringify(profile));
             toast('Добро пожаловать!', 'success');
-            const ret = state.returnTo;
-            state.returnTo = null;
+            const ret = state.returnTo; state.returnTo = null;
             showPage(ret || 'dashboard');
-        } catch (e) {
-            toast(e.message, 'error');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Войти';
-        }
+        } catch(e) { toast(e.message, 'error'); }
+        finally { btn.disabled = false; btn.textContent = 'Войти'; }
     }
 
     async function doRegister() {
         const username = document.getElementById('reg-username').value.trim();
         const email = document.getElementById('reg-email').value.trim();
         const password = document.getElementById('reg-password').value;
-        if (!username || !email || !password) {
-            toast('Заполни все поля', 'error');
-            return;
-        }
-        if (password.length < 6) {
-            toast('Пароль минимум 6 символов', 'error');
-            return;
-        }
+        if (!username || !email || !password) { toast('Заполни все поля', 'error'); return; }
+        if (password.length < 6) { toast('Пароль минимум 6 символов', 'error'); return; }
         const btn = document.getElementById('btn-register');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span>';
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
         try {
-            await api('POST', '/register', {username, email, password});
-            const data = await api('POST', '/login', {email, password});
+            await api('POST', '/register', { username, email, password });
+            const data = await api('POST', '/login', { email, password });
             state.token = data.token;
             localStorage.setItem('token', data.token);
             const profile = await api('GET', '/profile');
             state.user = profile;
             localStorage.setItem('user', JSON.stringify(profile));
             toast('Аккаунт создан!', 'success');
-            const ret = state.returnTo;
-            state.returnTo = null;
+            const ret = state.returnTo; state.returnTo = null;
             showPage(ret || 'dashboard');
-        } catch (e) {
-            toast(e.message, 'error');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Создать аккаунт';
-        }
+        } catch(e) { toast(e.message, 'error'); }
+        finally { btn.disabled = false; btn.textContent = 'Создать аккаунт'; }
     }
 
     function doLogout() {
-        state.token = null;
-        state.user = null;
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        state.token = null; state.user = null;
+        localStorage.removeItem('token'); localStorage.removeItem('user');
         sessionStorage.removeItem('qeasy_page');
         showPage('home');
         toast('Вышел из аккаунта', 'info');
@@ -1993,6 +3971,12 @@
         document.querySelectorAll('[id^="tab-btn-"]').forEach(t => t.classList.remove('active'));
         document.getElementById('tab-' + tab).classList.add('active');
         document.getElementById('tab-btn-' + tab).classList.add('active');
+    }
+
+    function setMobileNav(idx) {
+        document.querySelectorAll('.mobile-nav-item').forEach((el, i) => {
+            el.classList.toggle('active', i === idx);
+        });
     }
 
     // ══════════════════════════════════
@@ -2014,7 +3998,11 @@
         </div>`;
                 return;
             }
-            grid.innerHTML = quizzes.map(q => {
+            // подгружаем полные данные квизов чтобы показать количество вопросов
+            const fullQuizzes = await Promise.all(
+                quizzes.map(q => api('GET', '/quizzes/' + (q.ID||q.id)).catch(() => q))
+            );
+            grid.innerHTML = fullQuizzes.map(q => {
                 const id = q.ID || q.id;
                 const status = (q.Status || q.status || 'draft').toLowerCase();
                 const questions = q.Questions || q.questions || [];
@@ -2022,11 +4010,11 @@
       <div class="quiz-card">
         <div class="flex justify-between items-center" style="margin-bottom:8px;">
           <span class="badge badge-${status}">${statusLabel(status)}</span>
-          <span class="text-muted text-sm">${q.Category || q.category || '—'}</span>
+          <span class="text-muted text-sm">${q.Category||q.category||'—'}</span>
         </div>
-        <div class="quiz-card-title">${q.Title || q.title}</div>
+        <div class="quiz-card-title">${q.Title||q.title}</div>
         <div class="quiz-card-meta">
-          <span class="quiz-card-stat">⏱ ${q.TimePerQuestion || q.time_per_question}с</span>
+          <span class="quiz-card-stat">⏱ ${q.TimePerQuestion||q.time_per_question}с</span>
           <span class="quiz-card-stat">❓ ${questions.length} вопросов</span>
         </div>
         <div class="quiz-card-actions">
@@ -2035,30 +4023,23 @@
         </div>
       </div>`;
             }).join('');
-        } catch (e) {
+        } catch(e) {
             grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><p class="text-muted">Ошибка: ${e.message}</p></div>`;
         }
     }
 
     function statusLabel(s) {
-        return {
-            draft: 'Черновик',
-            published: 'Опубликован',
-            active: 'Активен',
-            finished: 'Завершён'
-        }[s] || s || 'Черновик';
+        return { draft:'Черновик', published:'Опубликован', active:'Активен', finished:'Завершён' }[s] || s || 'Черновик';
     }
 
     async function launchQuiz(quizId) {
         try {
-            const session = await api('POST', '/sessions', {quiz_id: quizId});
-            state.currentSession = {id: session.session_id, roomCode: session.room_code, quizId};
+            const session = await api('POST', '/sessions', { quiz_id: quizId });
+            state.currentSession = { id: session.session_id, roomCode: session.room_code, quizId };
             state.isOrganizer = true;
             state.quizData = await api('GET', '/quizzes/' + quizId);
             setupOrganizerSession();
-        } catch (e) {
-            toast(e.message, 'error');
-        }
+        } catch(e) { toast(e.message, 'error'); }
     }
 
     // ══════════════════════════════════
@@ -2103,9 +4084,7 @@
             const titleEl = document.querySelector('#page-create-quiz .content-title');
             if (titleEl) titleEl.textContent = 'Редактировать квиз';
             showPage('create-quiz', 'edit');
-        } catch (e) {
-            toast(e.message, 'error');
-        }
+        } catch(e) { toast(e.message, 'error'); }
     }
 
     function openAddQuestion() {
@@ -2167,29 +4146,20 @@
         const image = document.getElementById('q-image').value.trim();
         const type = document.getElementById('q-type').value;
         const timeLimit = parseInt(document.getElementById('q-time').value) || 30;
-        if (!text) {
-            toast('Введи текст вопроса', 'error');
-            return;
-        }
+        if (!text) { toast('Введи текст вопроса', 'error'); return; }
 
         const rows = document.querySelectorAll('#answers-inputs .answer-input-row');
         const answers = [];
         rows.forEach(row => {
             const val = row.querySelector('input').value.trim();
             const isCorrect = row.querySelector('.correct-toggle').classList.contains('active');
-            if (val) answers.push({text: val, is_correct: isCorrect});
+            if (val) answers.push({ text: val, is_correct: isCorrect });
         });
 
-        if (answers.length < 2) {
-            toast('Добавь минимум 2 варианта ответа', 'error');
-            return;
-        }
-        if (!answers.some(a => a.is_correct)) {
-            toast('Отметь хотя бы один правильный ответ', 'error');
-            return;
-        }
+        if (answers.length < 2) { toast('Добавь минимум 2 варианта ответа', 'error'); return; }
+        if (!answers.some(a => a.is_correct)) { toast('Отметь хотя бы один правильный ответ', 'error'); return; }
 
-        const q = {text, image_url: image, type, time_limit: timeLimit, answers};
+        const q = { text, image_url: image, type, time_limit: timeLimit, answers };
 
         if (state.editingQuestionIdx !== null) {
             // сохраняем id если редактируем существующий
@@ -2216,16 +4186,16 @@
             list.innerHTML = `<div class="empty-state" style="padding:40px;"><div class="empty-icon">❓</div><div class="empty-title">Нет вопросов</div></div>`;
             return;
         }
-        const letters = ['A', 'B', 'C', 'D'];
+        const letters = ['A','B','C','D'];
         list.innerHTML = state.pendingQuestions.map((q, i) => `
     <div class="question-item">
-      <div class="question-number">Вопрос ${i + 1}</div>
+      <div class="question-number">Вопрос ${i+1}</div>
       <div style="font-weight:500;margin-bottom:12px;">${q.text}</div>
       ${q.image_url ? `<div style="font-size:12px;color:var(--text2);margin-bottom:8px;">🖼 ${q.image_url}</div>` : ''}
       <div class="answers-grid">
         ${q.answers.map((a, ai) => `
           <div class="answer-input-row ${a.is_correct ? 'correct' : ''}" style="cursor:default;">
-            <div style="width:20px;text-align:center;font-size:12px;font-weight:600;color:${a.is_correct ? 'var(--green)' : 'var(--text2)'};">${letters[ai] || '?'}</div>
+            <div style="width:20px;text-align:center;font-size:12px;font-weight:600;color:${a.is_correct ? 'var(--green)' : 'var(--text2)'};">${letters[ai]||'?'}</div>
             <span style="font-size:14px;">${a.text}</span>
           </div>
         `).join('')}
@@ -2247,14 +4217,8 @@
         const title = document.getElementById('quiz-title').value.trim();
         const category = document.getElementById('quiz-category').value.trim();
         const timePerQuestion = parseInt(document.getElementById('quiz-time').value) || 30;
-        if (!title) {
-            toast('Введи название квиза', 'error');
-            return;
-        }
-        if (state.pendingQuestions.length === 0) {
-            toast('Добавь хотя бы один вопрос', 'error');
-            return;
-        }
+        if (!title) { toast('Введи название квиза', 'error'); return; }
+        if (state.pendingQuestions.length === 0) { toast('Добавь хотя бы один вопрос', 'error'); return; }
 
         try {
             let quizId = state.editingQuizId;
@@ -2270,7 +4234,7 @@
                 }
             } else {
                 // создаём новый
-                const quiz = await api('POST', '/quizzes', {title, category, time_per_question: timePerQuestion});
+                const quiz = await api('POST', '/quizzes', { title, category, time_per_question: timePerQuestion });
                 quizId = quiz.ID || quiz.id;
                 for (const q of state.pendingQuestions) {
                     await api('POST', `/quizzes/${quizId}/questions`, q);
@@ -2283,9 +4247,7 @@
             state.editingQuizId = null;
             toast(publish ? 'Квиз опубликован!' : 'Сохранено', 'success');
             showPage('dashboard');
-        } catch (e) {
-            toast(e.message, 'error');
-        }
+        } catch(e) { toast(e.message, 'error'); }
     }
 
     // ══════════════════════════════════
@@ -2338,27 +4300,20 @@
         <span class="participant-score">${p.TotalScore || p.total_score || 0}</span>
       </div>
     `).join('');
-        } catch (e) { /* тихо */
-        }
+        } catch(e) { /* тихо */ }
     }
 
     // ══════════════════════════════════
     // WEBSOCKET
     // ══════════════════════════════════
     function connectWebSocket(isOrganizer) {
-        if (state.ws) {
-            state.ws.close();
-            state.ws = null;
-        }
+        if (state.ws) { state.ws.close(); state.ws = null; }
         const url = `${WS_BASE}/${state.currentSession.id}?token=${state.token}`;
         state.ws = new WebSocket(url);
         state.ws.onopen = () => toast('Подключено к сессии', 'success');
         state.ws.onmessage = (e) => {
-            try {
-                handleWsEvent(JSON.parse(e.data), isOrganizer);
-            } catch (err) {
-                console.error('WS parse error', err);
-            }
+            try { handleWsEvent(JSON.parse(e.data), isOrganizer); }
+            catch(err) { console.error('WS parse error', err); }
         };
         state.ws.onclose = () => toast('Соединение закрыто', 'info');
         state.ws.onerror = () => toast('Ошибка WebSocket', 'error');
@@ -2366,14 +4321,14 @@
 
     function sendWs(type, payload = {}) {
         if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-            state.ws.send(JSON.stringify({type, payload}));
+            state.ws.send(JSON.stringify({ type, payload }));
         } else {
             toast('Нет соединения с сервером', 'error');
         }
     }
 
     function handleWsEvent(event, isOrganizer) {
-        switch (event.type) {
+        switch(event.type) {
             case 'session_started':
             case 'next_question':
                 showQuestion(event.payload, isOrganizer);
@@ -2397,7 +4352,7 @@
         state.currentQuestion = q;
         state.currentQuestionId = q.question_id || '';
         state.questionStartTime = Date.now();
-        const letters = ['A', 'B', 'C', 'D'];
+        const letters = ['A','B','C','D'];
 
         if (isOrganizer) {
             document.getElementById('organizer-waiting').style.display = 'none';
@@ -2410,7 +4365,7 @@
             const total = questions.length;
             const idx = q.question_index !== undefined ? q.question_index : 0;
 
-            document.getElementById('org-q-progress').textContent = `Вопрос ${idx + 1} из ${total}`;
+            document.getElementById('org-q-progress').textContent = `Вопрос ${idx+1} из ${total}`;
             document.getElementById('org-q-text').textContent = q.text;
 
             if (q.image_url) {
@@ -2442,7 +4397,7 @@
             document.getElementById('score-result').innerHTML = '';
 
             const idx = q.question_index !== undefined ? q.question_index : 0;
-            document.getElementById('play-q-progress').textContent = `Вопрос ${idx + 1}`;
+            document.getElementById('play-q-progress').textContent = `Вопрос ${idx+1}`;
             document.getElementById('play-q-text').textContent = q.text;
 
             if (q.image_url) {
@@ -2481,10 +4436,7 @@
     }
 
     function submitAnswer(answerId, btn) {
-        if (!state.participantId) {
-            toast('Нет ID участника', 'error');
-            return;
-        }
+        if (!state.participantId) { toast('Нет ID участника', 'error'); return; }
         const responseTimeMs = Date.now() - state.questionStartTime;
         clearInterval(state.timerInterval);
         document.querySelectorAll('.quiz-answer-btn').forEach(b => b.disabled = true);
@@ -2510,13 +4462,8 @@
     // ══════════════════════════════════
     // SESSION CONTROLS
     // ══════════════════════════════════
-    function startSession() {
-        sendWs('start_session');
-    }
-
-    function nextQuestion() {
-        sendWs('next_question');
-    }
+    function startSession() { sendWs('start_session'); }
+    function nextQuestion() { sendWs('next_question'); }
 
     function finishSession() {
         if (!confirm('Завершить квиз и показать результаты?')) return;
@@ -2529,8 +4476,27 @@
     }
 
     function copyRoomCode() {
-        const code = state.currentSession?.roomCode || '';
-        navigator.clipboard.writeText(code).then(() => toast('Код скопирован!', 'success'));
+        const code = (state.currentSession && state.currentSession.roomCode) ? state.currentSession.roomCode : document.getElementById('display-room-code').textContent;
+        if (!code || code === '——') { toast('Нет кода комнаты', 'error'); return; }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).then(() => toast('Код ' + code + ' скопирован!', 'success')).catch(() => {
+                fallbackCopy(code);
+            });
+        } else {
+            fallbackCopy(code);
+        }
+    }
+
+    function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        try { document.execCommand('copy'); toast('Код ' + text + ' скопирован!', 'success'); }
+        catch(e) { toast('Не удалось скопировать: ' + text, 'info'); }
+        document.body.removeChild(ta);
     }
 
     // ══════════════════════════════════
@@ -2544,17 +4510,13 @@
             return;
         }
         const roomCode = document.getElementById('join-room-code').value.trim().toUpperCase();
-        if (roomCode.length < 4) {
-            toast('Введи код комнаты', 'error');
-            return;
-        }
+        if (roomCode.length < 4) { toast('Введи код комнаты', 'error'); return; }
         const btn = document.getElementById('btn-join');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span>';
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
         try {
-            const data = await api('POST', '/sessions/join', {room_code: roomCode});
+            const data = await api('POST', '/sessions/join', { room_code: roomCode });
             state.participantId = data.participant_id;
-            state.currentSession = {id: data.session_id, roomCode};
+            state.currentSession = { id: data.session_id, roomCode };
             state.isOrganizer = false;
             state.myTotalScore = 0;
             document.getElementById('play-room-display').textContent = `Комната: ${roomCode}`;
@@ -2564,12 +4526,8 @@
             showPage('quiz-play');
             connectWebSocket(false);
             toast('Подключился к квизу!', 'success');
-        } catch (e) {
-            toast(e.message, 'error');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Войти в квиз →';
-        }
+        } catch(e) { toast(e.message, 'error'); }
+        finally { btn.disabled = false; btn.textContent = 'Войти в квиз →'; }
     }
 
     // ══════════════════════════════════
@@ -2578,20 +4536,17 @@
     function showLeaderboard(participants) {
         clearInterval(state.timerInterval);
         stopParticipantPolling();
-        if (state.ws) {
-            state.ws.close();
-            state.ws = null;
-        }
+        if (state.ws) { state.ws.close(); state.ws = null; }
 
         const list = document.getElementById('leaderboard-list');
         if (!participants || participants.length === 0) {
             list.innerHTML = `<div class="empty-state"><div class="empty-icon">😔</div><div class="empty-title">Нет результатов</div></div>`;
         } else {
-            const rankEmojis = ['🥇', '🥈', '🥉'];
+            const rankEmojis = ['🥇','🥈','🥉'];
             list.innerHTML = participants.map((p, i) => `
       <div class="leaderboard-item">
-        <div class="rank-number rank-${i + 1}">${rankEmojis[i] || (i + 1)}</div>
-        <div class="leaderboard-name">${p.Username || p.username || p.UserID || p.user_id || 'Участник ' + (i + 1)}</div>
+        <div class="rank-number rank-${i+1}">${rankEmojis[i] || (i+1)}</div>
+        <div class="leaderboard-name">${p.Username || p.username || p.UserID || p.user_id || 'Участник ' + (i+1)}</div>
         <div class="leaderboard-score">${p.TotalScore || p.total_score || 0}</div>
       </div>
     `).join('');
@@ -2606,7 +4561,23 @@
         state.pendingQuestions = [];
         if (state.token && state.user) {
             const saved = sessionStorage.getItem('qeasy_page') || 'dashboard';
-            showPage(saved);
+            const sub = sessionStorage.getItem('qeasy_sub') || '';
+            // restore join room code if was on join page
+            if (saved === 'join') {
+                const savedCode = sessionStorage.getItem('qeasy_room_code') || '';
+                showPage('join');
+                if (savedCode) {
+                    setTimeout(() => {
+                        const inp = document.getElementById('join-room-code');
+                        if (inp) inp.value = savedCode;
+                    }, 50);
+                }
+            } else if (saved === 'create-quiz') {
+                state.editingQuizId = null;
+                showPage('create-quiz');
+            } else {
+                showPage(saved, sub || undefined);
+            }
         }
     });
 </script>
