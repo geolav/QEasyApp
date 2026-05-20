@@ -4476,12 +4476,14 @@
     }
 
     function copyRoomCode() {
-        const code = (state.currentSession && state.currentSession.roomCode) ? state.currentSession.roomCode : document.getElementById('display-room-code').textContent;
+        const code = document.getElementById('display-room-code').textContent.trim();
         if (!code || code === '——') { toast('Нет кода комнаты', 'error'); return; }
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(code).then(() => toast('Код ' + code + ' скопирован!', 'success')).catch(() => {
-                fallbackCopy(code);
-            });
+
+        // пробуем современный способ
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(code)
+                .then(() => toast('Код ' + code + ' скопирован!', 'success'))
+                .catch(() => fallbackCopy(code));
         } else {
             fallbackCopy(code);
         }
@@ -4490,12 +4492,16 @@
     function fallbackCopy(text) {
         const ta = document.createElement('textarea');
         ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
+        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
         document.body.appendChild(ta);
-        ta.focus(); ta.select();
-        try { document.execCommand('copy'); toast('Код ' + text + ' скопирован!', 'success'); }
-        catch(e) { toast('Не удалось скопировать: ' + text, 'info'); }
+        ta.focus();
+        ta.select();
+        try {
+            document.execCommand('copy');
+            toast('Код ' + text + ' скопирован!', 'success');
+        } catch(e) {
+            toast('Код комнаты: ' + text, 'info');
+        }
         document.body.removeChild(ta);
     }
 
