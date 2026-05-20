@@ -76,7 +76,7 @@ func (r *repository) GetByID(id string) (entity.Quiz, error) {
 func (r *repository) GetByCreatorID(creatorID string) ([]entity.Quiz, error) {
 	rows, err := r.db.Query(context.Background(),
 		`SELECT id, creator_id, title, category, time_per_question, status, created_at
-			FROM quizzes WHERE creator_id = $1 ORDER BY created_at DESC`, creatorID)
+         FROM quizzes WHERE creator_id = $1 ORDER BY created_at DESC`, creatorID)
 	if err != nil {
 		return nil, err
 	}
@@ -85,11 +85,34 @@ func (r *repository) GetByCreatorID(creatorID string) ([]entity.Quiz, error) {
 	var quizzes []entity.Quiz
 	for rows.Next() {
 		var quiz entity.Quiz
-		if err := rows.Scan(&quiz.ID, &quiz.CreatorID, &quiz.Title, &quiz.Category, &quiz.TimePerQuestion, &quiz.Status, &quiz.CreatedAt); err != nil {
+		if err := rows.Scan(&quiz.ID, &quiz.CreatorID, &quiz.Title, &quiz.Category,
+			&quiz.TimePerQuestion, &quiz.Status, &quiz.CreatedAt); err != nil {
 			return nil, err
 		}
 		quizzes = append(quizzes, quiz)
 	}
+
+	// подгружаем вопросы для каждого квиза
+	for i, quiz := range quizzes {
+		questionRows, err := r.db.Query(context.Background(),
+			`SELECT id, quiz_id, order_index, type, text, image_url, time_limit
+             FROM questions WHERE quiz_id = $1 ORDER BY order_index`, quiz.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		for questionRows.Next() {
+			var q entity.Question
+			if err := questionRows.Scan(&q.ID, &q.QuizID, &q.OrderIndex,
+				&q.Type, &q.Text, &q.ImageURL, &q.TimeLimit); err != nil {
+				questionRows.Close()
+				return nil, err
+			}
+			quizzes[i].Questions = append(quizzes[i].Questions, q)
+		}
+		questionRows.Close()
+	}
+
 	return quizzes, nil
 }
 
